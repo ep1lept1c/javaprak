@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS Test_Drives;
-CREATE TABLE Test_Drives (
+DROP TABLE IF EXISTS TestDrives;
+CREATE TABLE TestDrives (
                              test_drive_id SERIAL PRIMARY KEY,
                              user_id INT NOT NULL REFERENCES Users(user_id),
                              car_id INT NOT NULL REFERENCES Cars(car_id),

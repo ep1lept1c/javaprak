@@ -2,6 +2,7 @@ package ru.msu.cmc.webprak.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +16,7 @@ public class Orders implements BaseEntity<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "order_id")
     private Long orderId;
 
     @ManyToOne
@@ -25,16 +27,24 @@ public class Orders implements BaseEntity<Long> {
     @JoinColumn(name = "car_id", nullable = false)
     private Cars car;
 
-    @Column(nullable = false)
-    private LocalDateTime orderDate = LocalDateTime.now();
+    @Column(name = "order_date")
+    @CreationTimestamp
+    private LocalDateTime orderDate;
 
-    private boolean testDriveRequired;
+    @Column(name = "test_drive_required")
+    private Boolean testDriveRequired = false;
 
+    @Column(name = "status", length = 20)
     @Enumerated(EnumType.STRING)
     private Status status = Status.PROCESSING;
 
     public enum Status {
-        PROCESSING, AWAITING_DELIVERY, IN_STOCK, TEST_DRIVE, COMPLETED, CANCELLED
+        PROCESSING, AWAITING_DELIVERY, IN_STOCK, TEST_DRIVE, COMPLETED, CANCELLED;
+
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        }
     }
 
     @Override

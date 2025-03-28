@@ -77,12 +77,99 @@ public class BuybacksDAOImpl extends CommonDAOImpl<Buybacks, Long> implements Bu
     public Collection<Buybacks> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate) {
         try (Session session = sessionFactory.openSession()) {
             Query<Buybacks> query = session.createQuery(
-                    "FROM Buybacks WHERE createdAt BETWEEN :startDate AND :endDate",
+                    "FROM Buybacks WHERE createdAt >= :startDate AND createdAt < :endDate",
                     Buybacks.class
             );
             query.setParameter("startDate", startDate);
             query.setParameter("endDate", endDate);
             return query.getResultList();
+        }
+    }
+
+    @Override
+    public Collection<Buybacks> findPendingBuybacks() {
+        try (Session session = sessionFactory.openSession()) {
+            Query<Buybacks> query = session.createQuery(
+                    "FROM Buybacks WHERE status = :status ORDER BY createdAt",
+                    Buybacks.class
+            );
+            query.setParameter("status", Buybacks.Status.PENDING);
+            return query.getResultList();
+        }
+    }
+
+    @Override
+    public Buybacks updateBuybackStatus(Long buybackId, Buybacks.Status newStatus, BigDecimal estimatedPrice) {
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+
+            Buybacks buyback = getById(buybackId);
+            if (buyback != null) {
+                buyback.setStatus(newStatus);
+
+                // Устанавливаем оценочную стоимость только если она предоставлена и статус ACCEPTED
+                if (estimatedPrice != null && newStatus == Buybacks.Status.ACCEPTED) {
+                    buyback.setEstimatedPrice(estimatedPrice);
+                }
+
+                session.merge(buyback);
+                session.getTransaction().commit();
+                return buyback;
+            }
+
+            session.getTransaction().rollback();
+            return null;
+        }
+    }
+
+    @Override
+    public Collection<Buybacks> findByMileageGreaterThan(int minMileage) {
+        try (Session session = sessionFactory.openSession()) {
+            Query<Buybacks> query = session.createQuery(
+                    "FROM Buybacks WHERE mileage > :minMileage",
+                    Buybacks.class
+            );
+            query.setParameter("minMileage", minMileage);
+            return query.getResultList();
+        }
+    }
+
+    @Override
+    public Buybacks createBuyback(Long userId, String carBrand, int carYear, int mileage, String photos) {
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+
+            Users user = session.get(Users.class, userId);
+            if (user != null) {
+                Buybacks buyback = new Buybacks();
+                buyback.setUser(user);
+                buyback.setCarBrand(carBrand);
+                buyback.setCarYear(carYear);
+                buyback.setMileage(mileage);
+                buyback.setPhotos(photos);
+                buyback.setStatus(Buybacks.Status.PENDING);
+                buyback.setCreatedAt(LocalDateTime.now());
+
+                session.persist(buyback);
+                session.getTransaction().commit();
+                return buyback;
+            }
+
+            session.getTransaction().rollback();
+            return null;
+        }
+    }
+
+    @Override
+    public Long countByCarBrandAndStatus(String brand, Buybacks.Status status) {
+        try (Session session = sessionFactory.openSession()) {
+            Query<Long> query = session.createQuery(
+                    "SELECT COUNT(b) FROM Buybacks b WHERE b.carBrand = :brand AND b.status = :status",
+                    Long.class
+            );
+            query.setParameter("brand", brand);
+            query.setParameter("status", status);
+            return query.uniqueResult();
         }
     }
 }

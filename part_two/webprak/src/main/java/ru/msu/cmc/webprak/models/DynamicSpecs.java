@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "dynamic_specs")
+@Table(name = "dynamicspecs")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,7 +14,7 @@ import java.time.LocalDate;
 public class DynamicSpecs implements BaseEntity<Long> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "car_id")
     private Long carId;
 
     @OneToOne
@@ -22,12 +22,14 @@ public class DynamicSpecs implements BaseEntity<Long> {
     @JoinColumn(name = "car_id")
     private Cars car;
 
-    private int mileage = 0;
+    @Column(name = "mileage")
+    private Integer mileage = 0;
 
-    @Column(nullable = false)
+    @Column(name = "last_service", nullable = false)
     private LocalDate lastService;
 
-    private int testDriveCount = 0;
+    @Column(name = "test_drive_count")
+    private Integer testDriveCount = 0;
 
     @Override
     public Long getId() {

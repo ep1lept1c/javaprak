@@ -49,7 +49,7 @@ public abstract class CommonDAOImpl<T extends BaseEntity<ID>, ID extends Seriali
                 entity.setId(null);
             }
             session.beginTransaction();
-            session.saveOrUpdate(entity);
+            session.persist(entity);
             session.getTransaction().commit();
         }
     }
@@ -62,7 +62,8 @@ public abstract class CommonDAOImpl<T extends BaseEntity<ID>, ID extends Seriali
                 if (entity.getId() != null) {
                     entity.setId(null);
                 }
-                session.saveOrUpdate(entity);
+                // Заменяем saveOrUpdate на persist для Hibernate 6
+                session.persist(entity);
             }
             session.getTransaction().commit();
         }
@@ -72,7 +73,8 @@ public abstract class CommonDAOImpl<T extends BaseEntity<ID>, ID extends Seriali
     public void update(T entity) {
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            session.update(entity);
+            // Заменяем update на merge для Hibernate 6
+            session.merge(entity);
             session.getTransaction().commit();
         }
     }
@@ -81,7 +83,10 @@ public abstract class CommonDAOImpl<T extends BaseEntity<ID>, ID extends Seriali
     public void delete(T entity) {
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            session.delete(entity);
+            if (!session.contains(entity)) {
+                entity = session.merge(entity);
+            }
+            session.remove(entity); // Заменяем delete на remove
             session.getTransaction().commit();
         }
     }
@@ -92,7 +97,7 @@ public abstract class CommonDAOImpl<T extends BaseEntity<ID>, ID extends Seriali
             T entity = getById(id);
             if (entity != null) {
                 session.beginTransaction();
-                session.delete(entity);
+                session.remove(entity); // Заменяем delete на remove
                 session.getTransaction().commit();
             }
         }

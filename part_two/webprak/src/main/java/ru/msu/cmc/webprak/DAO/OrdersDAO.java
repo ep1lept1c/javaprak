@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 
 public interface OrdersDAO extends CommonDAO<Orders, Long> {
-
     /**
      * Находит заказы по пользователю
      * @param user пользователь
@@ -43,4 +42,43 @@ public interface OrdersDAO extends CommonDAO<Orders, Long> {
      * @return коллекция заказов с тест-драйвом или без
      */
     Collection<Orders> findByTestDriveRequired(boolean required);
+
+    /**
+     * Получает последние заказы в указанном количестве
+     * @param limit количество заказов
+     * @return коллекция последних заказов
+     */
+    Collection<Orders> findRecentOrders(int limit);
+
+    /**
+     * Обновляет статус заказа
+     * @param orderId ID заказа
+     * @param newStatus новый статус
+     * @return обновленный заказ или null, если заказ не найден
+     */
+    Orders updateOrderStatus(Long orderId, Orders.Status newStatus);
+
+    /**
+     * Находит заказы по пользователю и статусу
+     * @param user пользователь
+     * @param status статус заказа
+     * @return коллекция заказов с указанным пользователем и статусом
+     */
+    Collection<Orders> findByUserAndStatus(Users user, Orders.Status status);
+
+    /**
+     * Подсчитывает количество заказов с указанным статусом
+     * @param status статус заказа
+     * @return количество заказов с указанным статусом
+     */
+    Long countByStatus(Orders.Status status);
+
+    /**
+     * Создает новый заказ с указанными параметрами
+     * @param userId ID пользователя
+     * @param carId ID автомобиля
+     * @param testDriveRequired требуется ли тест-драйв
+     * @return созданный заказ
+     */
+    Orders createOrder(Long userId, Long carId, boolean testDriveRequired);
 }

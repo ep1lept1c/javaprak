@@ -5,6 +5,7 @@ import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 import ru.msu.cmc.webprak.DAO.TestDrivesDAO;
 import ru.msu.cmc.webprak.models.Cars;
+import ru.msu.cmc.webprak.models.DynamicSpecs;
 import ru.msu.cmc.webprak.models.TestDrives;
 import ru.msu.cmc.webprak.models.Users;
 
@@ -77,6 +78,61 @@ public class TestDrivesDAOImpl extends CommonDAOImpl<TestDrives, Long> implement
 
             Long count = query.uniqueResult();
             return count == 0;
+        }
+    }
+
+    @Override
+    public Collection<TestDrives> findUpcomingTestDrives(LocalDateTime currentTime) {
+        try (Session session = sessionFactory.openSession()) {
+            Query<TestDrives> query = session.createQuery(
+                    "FROM TestDrives WHERE scheduledTime > :currentTime AND status = :pendingStatus ORDER BY scheduledTime",
+                    TestDrives.class
+            );
+            query.setParameter("currentTime", currentTime);
+            query.setParameter("pendingStatus", TestDrives.Status.PENDING);
+            return query.getResultList();
+        }
+    }
+
+    @Override
+    public TestDrives updateTestDriveStatus(Long testDriveId, TestDrives.Status newStatus) {
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+
+            TestDrives testDrive = getById(testDriveId);
+            if (testDrive != null) {
+                testDrive.setStatus(newStatus);
+
+                // Если тест-драйв завершен, увеличиваем счетчик тест-драйвов для автомобиля
+                if (newStatus == TestDrives.Status.COMPLETED) {
+                    Cars car = testDrive.getCar();
+                    DynamicSpecs specs = car.getDynamicSpecs();
+                    if (specs != null) {
+                        specs.setTestDriveCount(specs.getTestDriveCount() + 1);
+                        session.merge(specs);
+                    }
+                }
+
+                session.merge(testDrive);
+                session.getTransaction().commit();
+                return testDrive;
+            }
+
+            session.getTransaction().rollback();
+            return null;
+        }
+    }
+
+    @Override
+    public Collection<TestDrives> findByUserAndStatus(Users user, TestDrives.Status status) {
+        try (Session session = sessionFactory.openSession()) {
+            Query<TestDrives> query = session.createQuery(
+                    "FROM TestDrives WHERE user = :user AND status = :status ORDER BY scheduledTime",
+                    TestDrives.class
+            );
+            query.setParameter("user", user);
+            query.setParameter("status", status);
+            return query.getResultList();
         }
     }
 }

@@ -51,17 +51,100 @@ public class DynamicSpecsDAOImpl extends CommonDAOImpl<DynamicSpecs, Long> imple
     }
 
     @Override
-    public void incrementTestDriveCount(Cars car) {
+    public Collection<DynamicSpecs> findByTestDriveCountGreaterThan(int count) {
+        try (Session session = sessionFactory.openSession()) {
+            Query<DynamicSpecs> query = session.createQuery(
+                    "FROM DynamicSpecs WHERE testDriveCount > :count",
+                    DynamicSpecs.class
+            );
+            query.setParameter("count", count);
+            return query.getResultList();
+        }
+    }
+
+    @Override
+    public DynamicSpecs incrementTestDriveCount(Cars car) {
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
 
             DynamicSpecs specs = findByCar(car);
             if (specs != null) {
                 specs.setTestDriveCount(specs.getTestDriveCount() + 1);
-                session.update(specs);
+                session.merge(specs);
+                session.getTransaction().commit();
+                return specs;
             }
 
-            session.getTransaction().commit();
+            session.getTransaction().rollback();
+            return null;
+        }
+    }
+
+    @Override
+    public Collection<DynamicSpecs> findByLastServiceBetween(LocalDate startDate, LocalDate endDate) {
+        try (Session session = sessionFactory.openSession()) {
+            Query<DynamicSpecs> query = session.createQuery(
+                    "FROM DynamicSpecs WHERE lastService BETWEEN :startDate AND :endDate",
+                    DynamicSpecs.class
+            );
+            query.setParameter("startDate", startDate);
+            query.setParameter("endDate", endDate);
+            return query.getResultList();
+        }
+    }
+
+    @Override
+    public DynamicSpecs updateMileage(Long carId, int newMileage) {
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+
+            DynamicSpecs specs = getById(carId);
+            if (specs != null) {
+                // Проверка на валидность - новый пробег должен быть больше старого
+                if (newMileage >= specs.getMileage()) {
+                    specs.setMileage(newMileage);
+                    session.merge(specs);
+                    session.getTransaction().commit();
+                    return specs;
+                }
+            }
+
+            session.getTransaction().rollback();
+            return null;
+        }
+    }
+
+    @Override
+    public DynamicSpecs updateLastServiceDate(Long carId, LocalDate serviceDate) {
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+
+            DynamicSpecs specs = getById(carId);
+            if (specs != null) {
+                specs.setLastService(serviceDate);
+                session.merge(specs);
+                session.getTransaction().commit();
+                return specs;
+            }
+
+            session.getTransaction().rollback();
+            return null;
+        }
+    }
+
+    @Override
+    public Collection<DynamicSpecs> findCarsNeedingService(LocalDate currentDate) {
+        try (Session session = sessionFactory.openSession()) {
+            // Находим автомобили, у которых последнее ТО было более года назад
+            LocalDate oneYearAgo = currentDate.minusYears(1);
+
+            Query<DynamicSpecs> query = session.createQuery(
+                    "FROM DynamicSpecs ds JOIN FETCH ds.car c WHERE ds.lastService < :oneYearAgo AND c.status != :soldStatus",
+                    DynamicSpecs.class
+            );
+            query.setParameter("oneYearAgo", oneYearAgo);
+            query.setParameter("soldStatus", Cars.Status.SOLD);
+            return query.getResultList();
         }
     }
 }

@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "test_drives")
+@Table(name = "testdrives")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,6 +15,7 @@ public class TestDrives implements BaseEntity<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "test_drive_id")
     private Long testDriveId;
 
     @ManyToOne
@@ -25,16 +26,23 @@ public class TestDrives implements BaseEntity<Long> {
     @JoinColumn(name = "car_id", nullable = false)
     private Cars car;
 
-    @Column(nullable = false)
+    @Column(name = "scheduled_time", nullable = false)
     private LocalDateTime scheduledTime;
 
+    @Column(name = "status", length = 10)
     @Enumerated(EnumType.STRING)
     private Status status = Status.PENDING;
 
+    @Column(name = "notes")
     private String notes;
 
     public enum Status {
-        PENDING, COMPLETED, CANCELLED
+        PENDING, COMPLETED, CANCELLED;
+
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        }
     }
 
     @Override

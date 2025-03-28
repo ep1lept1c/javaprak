@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "consumer_specs")
+@Table(name = "consumerspecs")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -12,7 +12,7 @@ import lombok.*;
 public class ConsumerSpecs implements BaseEntity<Long> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "car_id")
     private Long carId;
 
     @OneToOne
@@ -20,14 +20,20 @@ public class ConsumerSpecs implements BaseEntity<Long> {
     @JoinColumn(name = "car_id")
     private Cars car;
 
+    @Column(name = "interior_material")
     private String interiorMaterial = "fabric";
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "color", nullable = false, length = 100)
     private String color;
 
-    private boolean hasAirConditioning = false;
-    private boolean hasMultimedia = false;
-    private boolean hasGps = false;
+    @Column(name = "has_air_conditioning")
+    private Boolean hasAirConditioning = false;
+
+    @Column(name = "has_multimedia")
+    private Boolean hasMultimedia = false;
+
+    @Column(name = "has_gps")
+    private Boolean hasGps = false;
 
     @Override
     public Long getId() {

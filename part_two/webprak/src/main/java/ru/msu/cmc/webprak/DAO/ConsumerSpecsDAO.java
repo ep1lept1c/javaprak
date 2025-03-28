@@ -1,36 +1,78 @@
 package ru.msu.cmc.webprak.DAO;
 
-import ru.msu.cmc.webprak.models.DynamicSpecs;
+import ru.msu.cmc.webprak.models.ConsumerSpecs;
 import ru.msu.cmc.webprak.models.Cars;
-import java.time.LocalDate;
 import java.util.Collection;
 
-public interface DynamicSpecsDAO extends CommonDAO<DynamicSpecs, Long> {
-
+public interface ConsumerSpecsDAO extends CommonDAO<ConsumerSpecs, Long> {
     /**
-     * Находит динамические характеристики по автомобилю
+     * Находит потребительские характеристики по автомобилю
      * @param car автомобиль
-     * @return динамические характеристики для указанного автомобиля или null, если не найдены
+     * @return потребительские характеристики для указанного автомобиля или null, если не найдены
      */
-    DynamicSpecs findByCar(Cars car);
+    ConsumerSpecs findByCar(Cars car);
 
     /**
-     * Находит автомобили с пробегом менее указанного
-     * @param maxMileage максимальный пробег
-     * @return коллекция динамических характеристик автомобилей с подходящим пробегом
+     * Находит автомобили указанного цвета
+     * @param color цвет
+     * @return коллекция потребительских характеристик автомобилей указанного цвета
      */
-    Collection<DynamicSpecs> findByMileageLessThan(int maxMileage);
+    Collection<ConsumerSpecs> findByColor(String color);
 
     /**
-     * Находит автомобили, прошедшие техобслуживание после указанной даты
-     * @param date дата
-     * @return коллекция динамических характеристик автомобилей с подходящей датой ТО
+     * Находит автомобили с указанным материалом интерьера
+     * @param material материал интерьера
+     * @return коллекция потребительских характеристик автомобилей с указанным материалом интерьера
      */
-    Collection<DynamicSpecs> findByLastServiceAfter(LocalDate date);
+    Collection<ConsumerSpecs> findByInteriorMaterial(String material);
 
     /**
-     * Увеличивает счетчик тест-драйвов для автомобиля
-     * @param car автомобиль
+     * Находит автомобили с кондиционером или без него
+     * @param hasAC признак наличия кондиционера
+     * @return коллекция потребительских характеристик автомобилей с/без кондиционера
      */
-    void incrementTestDriveCount(Cars car);
+    Collection<ConsumerSpecs> findByHasAirConditioning(boolean hasAC);
+
+    /**
+     * Находит автомобили с мультимедиа системой или без неё
+     * @param hasMultimedia признак наличия мультимедиа системы
+     * @return коллекция потребительских характеристик автомобилей с/без мультимедиа системы
+     */
+    Collection<ConsumerSpecs> findByHasMultimedia(boolean hasMultimedia);
+
+    /**
+     * Находит автомобили с GPS-навигацией или без неё
+     * @param hasGps признак наличия GPS-навигации
+     * @return коллекция потребительских характеристик автомобилей с/без GPS-навигации
+     */
+    Collection<ConsumerSpecs> findByHasGps(boolean hasGps);
+
+    /**
+     * Находит автомобили по комбинации потребительских характеристик
+     * @param hasAC признак наличия кондиционера
+     * @param hasMultimedia признак наличия мультимедиа системы
+     * @param hasGps признак наличия GPS-навигации
+     * @return коллекция потребительских характеристик с указанной комбинацией опций
+     */
+    Collection<ConsumerSpecs> findByMultipleFeatures(boolean hasAC, boolean hasMultimedia, boolean hasGps);
+
+    /**
+     * Обновляет потребительские характеристики автомобиля
+     * @param carId ID автомобиля
+     * @param color цвет
+     * @param interiorMaterial материал интерьера
+     * @param hasAC признак наличия кондиционера
+     * @param hasMultimedia признак наличия мультимедиа системы
+     * @param hasGps признак наличия GPS-навигации
+     * @return обновленные потребительские характеристики или null, если автомобиль не найден
+     */
+    ConsumerSpecs updateConsumerSpecs(Long carId, String color, String interiorMaterial,
+                                      boolean hasAC, boolean hasMultimedia, boolean hasGps);
+
+    /**
+     * Находит популярные цвета автомобилей
+     * @param limit количество цветов в результате
+     * @return коллекция популярных цветов автомобилей
+     */
+    Collection<String> findPopularColors(int limit);
 }

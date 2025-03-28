@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 import java.util.Collection;
 
 public interface TechnicalSpecsDAO extends CommonDAO<TechnicalSpecs, Long> {
-
     /**
      * Находит технические характеристики по автомобилю
      * @param car автомобиль
@@ -35,4 +34,34 @@ public interface TechnicalSpecsDAO extends CommonDAO<TechnicalSpecs, Long> {
      * @return коллекция технических характеристик автомобилей с указанным типом КПП
      */
     Collection<TechnicalSpecs> findByAutomaticTransmission(boolean automatic);
+
+    /**
+     * Находит автомобили с объемом двигателя в указанном диапазоне
+     * @param minVolume минимальный объем двигателя
+     * @param maxVolume максимальный объем двигателя
+     * @return коллекция технических характеристик подходящих автомобилей
+     */
+    Collection<TechnicalSpecs> findByEngineVolumeBetween(BigDecimal minVolume, BigDecimal maxVolume);
+
+    /**
+     * Находит автомобили с указанным количеством дверей и сидений
+     * @param doors количество дверей
+     * @param seats количество сидений
+     * @return коллекция технических характеристик подходящих автомобилей
+     */
+    Collection<TechnicalSpecs> findByDoorsAndSeats(int doors, int seats);
+
+    /**
+     * Находит автомобили по наличию/отсутствию круиз-контроля
+     * @param hasCruiseControl признак наличия круиз-контроля
+     * @return коллекция технических характеристик подходящих автомобилей
+     */
+    Collection<TechnicalSpecs> findByCruiseControl(boolean hasCruiseControl);
+
+    /**
+     * Находит автомобили с расходом топлива менее указанного значения
+     * @param maxConsumption максимальный расход топлива
+     * @return коллекция технических характеристик подходящих автомобилей
+     */
+    Collection<TechnicalSpecs> findByFuelConsumptionLessThan(BigDecimal maxConsumption);
 }

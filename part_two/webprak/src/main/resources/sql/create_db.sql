@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS
     CarsPromotions,
     Orders,
-    Test_Drives,
+    TestDrives,
     Buybacks,
     Promotions,
     DynamicSpecs,
@@ -24,19 +24,6 @@ CREATE TABLE Users (
                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Триггер для обновления поля updated_at
-CREATE OR REPLACE FUNCTION set_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trigger_set_updated_at
-    BEFORE UPDATE ON Users
-    FOR EACH ROW
-    EXECUTE FUNCTION set_updated_at();
 
 -- Создание таблицы Cars
 CREATE TABLE Cars (
@@ -106,13 +93,13 @@ CREATE TABLE Promotions (
 
 -- Создание таблицы CarsPromotions (связь M:N между Cars и Promotions)
 CREATE TABLE CarsPromotions (
-                                car_id INT NOT NULL REFERENCES Cars(car_id),
-                                promotion_id INT NOT NULL REFERENCES Promotions(promotion_id),
+                                car_id INT NOT NULL REFERENCES Cars(car_id) ON DELETE CASCADE,
+                                promotion_id INT NOT NULL REFERENCES Promotions(promotion_id) ON DELETE CASCADE,
                                 PRIMARY KEY (car_id, promotion_id)
 );
 
 -- Создание таблицы Test_Drives
-CREATE TABLE Test_Drives (
+CREATE TABLE TestDrives (
                              test_drive_id SERIAL PRIMARY KEY,
                              user_id INT NOT NULL REFERENCES Users(user_id),
                              car_id INT NOT NULL REFERENCES Cars(car_id),

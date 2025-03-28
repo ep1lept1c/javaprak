@@ -59,4 +59,54 @@ public class TechnicalSpecsDAOImpl extends CommonDAOImpl<TechnicalSpecs, Long> i
             return query.getResultList();
         }
     }
+
+    @Override
+    public Collection<TechnicalSpecs> findByEngineVolumeBetween(BigDecimal minVolume, BigDecimal maxVolume) {
+        try (Session session = sessionFactory.openSession()) {
+            Query<TechnicalSpecs> query = session.createQuery(
+                    "FROM TechnicalSpecs WHERE engineVolume BETWEEN :minVolume AND :maxVolume",
+                    TechnicalSpecs.class
+            );
+            query.setParameter("minVolume", minVolume);
+            query.setParameter("maxVolume", maxVolume);
+            return query.getResultList();
+        }
+    }
+
+    @Override
+    public Collection<TechnicalSpecs> findByDoorsAndSeats(int doors, int seats) {
+        try (Session session = sessionFactory.openSession()) {
+            Query<TechnicalSpecs> query = session.createQuery(
+                    "FROM TechnicalSpecs WHERE doors = :doors AND seats = :seats",
+                    TechnicalSpecs.class
+            );
+            query.setParameter("doors", doors);
+            query.setParameter("seats", seats);
+            return query.getResultList();
+        }
+    }
+
+    @Override
+    public Collection<TechnicalSpecs> findByCruiseControl(boolean hasCruiseControl) {
+        try (Session session = sessionFactory.openSession()) {
+            Query<TechnicalSpecs> query = session.createQuery(
+                    "FROM TechnicalSpecs WHERE cruiseControl = :hasCruiseControl",
+                    TechnicalSpecs.class
+            );
+            query.setParameter("hasCruiseControl", hasCruiseControl);
+            return query.getResultList();
+        }
+    }
+
+    @Override
+    public Collection<TechnicalSpecs> findByFuelConsumptionLessThan(BigDecimal maxConsumption) {
+        try (Session session = sessionFactory.openSession()) {
+            Query<TechnicalSpecs> query = session.createQuery(
+                    "FROM TechnicalSpecs WHERE fuelConsumption IS NOT NULL AND fuelConsumption < :maxConsumption",
+                    TechnicalSpecs.class
+            );
+            query.setParameter("maxConsumption", maxConsumption);
+            return query.getResultList();
+        }
+    }
 }

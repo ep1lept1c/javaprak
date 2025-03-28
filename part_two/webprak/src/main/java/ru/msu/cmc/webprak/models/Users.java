@@ -2,8 +2,11 @@ package ru.msu.cmc.webprak.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -15,37 +18,52 @@ public class Users implements BaseEntity<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long userId;
 
-    @Column(nullable = false)
+    @Column(name = "role", nullable = false, length = 10)
     @Enumerated(EnumType.STRING)
     private Role role = Role.CLIENT;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(name = "phone", length = 20)
     private String phone;
+
+    @Column(name = "address")
     private String address;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
-    @Column(nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    @Column(name = "updated_at")
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
-    @PreUpdate
-    public void preUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    @OneToMany(mappedBy = "user")
+    private Set<Orders> orders;
+
+    @OneToMany(mappedBy = "user")
+    private Set<TestDrives> testDrives;
+
+    @OneToMany(mappedBy = "user")
+    private Set<Buybacks> buybacks;
 
     public enum Role {
-        CLIENT, ADMIN
+        CLIENT, ADMIN;
+
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        }
     }
 
     @Override
@@ -56,5 +74,16 @@ public class Users implements BaseEntity<Long> {
     @Override
     public void setId(Long id) {
         this.userId = id;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

@@ -1,12 +1,12 @@
 package ru.msu.cmc.webprak.DAO;
 
 import ru.msu.cmc.webprak.models.Promotions;
+import ru.msu.cmc.webprak.models.Cars;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
 
 public interface PromotionsDAO extends CommonDAO<Promotions, Long> {
-
     /**
      * Находит активные акции
      * @return коллекция активных акций
@@ -33,4 +33,46 @@ public interface PromotionsDAO extends CommonDAO<Promotions, Long> {
      * @return коллекция акций с подходящим заголовком
      */
     Collection<Promotions> findByTitleContaining(String title);
+
+    /**
+     * Находит акции для указанного автомобиля
+     * @param car автомобиль
+     * @return коллекция акций для указанного автомобиля
+     */
+    Collection<Promotions> findByCar(Cars car);
+
+    /**
+     * Добавляет автомобиль к акции
+     * @param promotionId ID акции
+     * @param carId ID автомобиля
+     */
+    void addCarToPromotion(Long promotionId, Long carId);
+
+    /**
+     * Удаляет автомобиль из акции
+     * @param promotionId ID акции
+     * @param carId ID автомобиля
+     */
+    void removeCarFromPromotion(Long promotionId, Long carId);
+
+    /**
+     * Находит предстоящие акции относительно текущей даты
+     * @param currentDate текущая дата
+     * @return коллекция предстоящих акций
+     */
+    Collection<Promotions> findUpcomingPromotions(LocalDate currentDate);
+
+    /**
+     * Находит истекшие акции, которые все еще активны
+     * @param currentDate текущая дата
+     * @return коллекция истекших акций
+     */
+    Collection<Promotions> findExpiredActivePromotions(LocalDate currentDate);
+
+    /**
+     * Деактивирует истекшие акции
+     * @param currentDate текущая дата
+     * @return количество деактивированных акций
+     */
+    int deactivateExpiredPromotions(LocalDate currentDate);
 }

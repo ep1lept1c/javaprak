@@ -1,8 +1,11 @@
 package ru.msu.cmc.webprak.models;
 
+
 import jakarta.persistence.*;
 import lombok.*;
-
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -16,34 +19,43 @@ public class Buybacks implements BaseEntity<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "buyback_id")
     private Long buybackId;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "car_brand", nullable = false)
     private String carBrand;
 
-    @Column(nullable = false)
-    private int carYear;
+    @Column(name = "car_year", nullable = false)
+    private Integer carYear;
 
-    @Column(nullable = false)
-    private int mileage;
+    @Column(name = "mileage", nullable = false)
+    private Integer mileage;
 
-    @Column(columnDefinition = "jsonb")
+    @Column(name = "photos", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String photos;
 
+    @Column(name = "status", length = 10)
     @Enumerated(EnumType.STRING)
     private Status status = Status.PENDING;
 
+    @Column(name = "estimated_price", precision = 10, scale = 2)
     private BigDecimal estimatedPrice;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", updatable = true)
+    private LocalDateTime createdAt;
 
     public enum Status {
-        PENDING, ACCEPTED, REJECTED
+        PENDING, ACCEPTED, REJECTED;
+
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        }
     }
 
     @Override
