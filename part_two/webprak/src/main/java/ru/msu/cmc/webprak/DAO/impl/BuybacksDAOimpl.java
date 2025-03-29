@@ -20,88 +20,88 @@ public class BuybacksDAOImpl extends CommonDAOImpl<Buybacks, Long> implements Bu
 
     @Override
     public Collection<Buybacks> findByUser(Users user) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<Buybacks> query = session.createQuery("FROM Buybacks WHERE user = :user", Buybacks.class);
+        Session session = sessionFactory.openSession();
+        Query<Buybacks> query = session.createQuery("FROM Buybacks WHERE user = :user", Buybacks.class);
             query.setParameter("user", user);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<Buybacks> findByStatus(Buybacks.Status status) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<Buybacks> query = session.createQuery("FROM Buybacks WHERE status = :status", Buybacks.class);
+        Session session = sessionFactory.openSession();
+        Query<Buybacks> query = session.createQuery("FROM Buybacks WHERE status = :status", Buybacks.class);
             query.setParameter("status", status);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<Buybacks> findByCarBrand(String brand) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<Buybacks> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<Buybacks> query = session.createQuery(
                     "FROM Buybacks WHERE carBrand = :brand",
                     Buybacks.class
             );
             query.setParameter("brand", brand);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<Buybacks> findByEstimatedPriceBetween(BigDecimal minPrice, BigDecimal maxPrice) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<Buybacks> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<Buybacks> query = session.createQuery(
                     "FROM Buybacks WHERE estimatedPrice BETWEEN :minPrice AND :maxPrice",
                     Buybacks.class
             );
             query.setParameter("minPrice", minPrice);
             query.setParameter("maxPrice", maxPrice);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<Buybacks> findByCarYear(int year) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<Buybacks> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<Buybacks> query = session.createQuery(
                     "FROM Buybacks WHERE carYear = :year",
                     Buybacks.class
             );
             query.setParameter("year", year);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<Buybacks> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<Buybacks> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<Buybacks> query = session.createQuery(
                     "FROM Buybacks WHERE createdAt >= :startDate AND createdAt < :endDate",
                     Buybacks.class
             );
             query.setParameter("startDate", startDate);
             query.setParameter("endDate", endDate);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<Buybacks> findPendingBuybacks() {
-        try (Session session = sessionFactory.openSession()) {
-            Query<Buybacks> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<Buybacks> query = session.createQuery(
                     "FROM Buybacks WHERE status = :status ORDER BY createdAt",
                     Buybacks.class
             );
             query.setParameter("status", Buybacks.Status.PENDING);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Buybacks updateBuybackStatus(Long buybackId, Buybacks.Status newStatus, BigDecimal estimatedPrice) {
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
 
             Buybacks buyback = getById(buybackId);
             if (buyback != null) {
@@ -119,25 +119,25 @@ public class BuybacksDAOImpl extends CommonDAOImpl<Buybacks, Long> implements Bu
 
             session.getTransaction().rollback();
             return null;
-        }
+
     }
 
     @Override
     public Collection<Buybacks> findByMileageGreaterThan(int minMileage) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<Buybacks> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<Buybacks> query = session.createQuery(
                     "FROM Buybacks WHERE mileage > :minMileage",
                     Buybacks.class
             );
             query.setParameter("minMileage", minMileage);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Buybacks createBuyback(Long userId, String carBrand, int carYear, int mileage, String photos) {
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
 
             Users user = session.get(Users.class, userId);
             if (user != null) {
@@ -157,19 +157,19 @@ public class BuybacksDAOImpl extends CommonDAOImpl<Buybacks, Long> implements Bu
 
             session.getTransaction().rollback();
             return null;
-        }
+
     }
 
     @Override
     public Long countByCarBrandAndStatus(String brand, Buybacks.Status status) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<Long> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<Long> query = session.createQuery(
                     "SELECT COUNT(b) FROM Buybacks b WHERE b.carBrand = :brand AND b.status = :status",
                     Long.class
             );
             query.setParameter("brand", brand);
             query.setParameter("status", status);
             return query.uniqueResult();
-        }
+
     }
 }

@@ -136,6 +136,8 @@ public class DynamicSpecsDAOTest {
         // Проверяем в базе
         DynamicSpecs fromDb = dynamicSpecsDAO.findByCar(testCar1);
         assertEquals(initialCount + 1, fromDb.getTestDriveCount());
+        DynamicSpecs updated2 = dynamicSpecsDAO.incrementTestDriveCount(null);
+        assertNull(updated2);
     }
 
     @Test
@@ -157,6 +159,8 @@ public class DynamicSpecsDAOTest {
 
         // Проверяем валидацию (новый пробег не может быть меньше старого)
         assertNull(dynamicSpecsDAO.updateMileage(testCar1.getId(), 5000));
+        DynamicSpecs updated2 = dynamicSpecsDAO.updateMileage(999L, 7500);
+        assertNull(updated2);
     }
 
     @Test
@@ -170,6 +174,8 @@ public class DynamicSpecsDAOTest {
         // Проверяем в базе
         DynamicSpecs fromDb = dynamicSpecsDAO.findByCar(testCar1);
         assertEquals(newDate, fromDb.getLastService());
+        DynamicSpecs updated2 = dynamicSpecsDAO.updateLastServiceDate(999L, newDate);
+        assertNull(updated2);
     }
 
     @Test

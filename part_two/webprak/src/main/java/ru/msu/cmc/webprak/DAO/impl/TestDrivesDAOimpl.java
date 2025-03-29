@@ -21,47 +21,48 @@ public class TestDrivesDAOImpl extends CommonDAOImpl<TestDrives, Long> implement
 
     @Override
     public Collection<TestDrives> findByUser(Users user) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<TestDrives> query = session.createQuery("FROM TestDrives WHERE user = :user", TestDrives.class);
+        Session session = sessionFactory.openSession();
+        Query<TestDrives> query = session.createQuery("FROM TestDrives WHERE user = :user", TestDrives.class);
             query.setParameter("user", user);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<TestDrives> findByCar(Cars car) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<TestDrives> query = session.createQuery("FROM TestDrives WHERE car = :car", TestDrives.class);
+        Session session = sessionFactory.openSession();
+        Query<TestDrives> query = session.createQuery("FROM TestDrives WHERE car = :car", TestDrives.class);
             query.setParameter("car", car);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<TestDrives> findByStatus(TestDrives.Status status) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<TestDrives> query = session.createQuery("FROM TestDrives WHERE status = :status", TestDrives.class);
+        Session session = sessionFactory.openSession();
+        Query<TestDrives> query = session.createQuery("FROM TestDrives WHERE status = :status", TestDrives.class);
             query.setParameter("status", status);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<TestDrives> findByScheduledTimeBetween(LocalDateTime startTime, LocalDateTime endTime) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<TestDrives> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<TestDrives> query = session.createQuery(
                     "FROM TestDrives WHERE scheduledTime BETWEEN :startTime AND :endTime",
                     TestDrives.class
             );
             query.setParameter("startTime", startTime);
             query.setParameter("endTime", endTime);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public boolean isCarAvailableForTestDrive(Cars car, LocalDateTime time) {
-        try (Session session = sessionFactory.openSession()) {
+        Session session = sessionFactory.openSession();
+        if (car != null) {
             // Проверяем, нет ли тест-драйвов для этого автомобиля в выбранное время (±1 час)
             LocalDateTime startTime = time.minusHours(1);
             LocalDateTime endTime = time.plusHours(1);
@@ -79,25 +80,26 @@ public class TestDrivesDAOImpl extends CommonDAOImpl<TestDrives, Long> implement
             Long count = query.uniqueResult();
             return count == 0;
         }
+        return false;
     }
 
     @Override
     public Collection<TestDrives> findUpcomingTestDrives(LocalDateTime currentTime) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<TestDrives> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<TestDrives> query = session.createQuery(
                     "FROM TestDrives WHERE scheduledTime > :currentTime AND status = :pendingStatus ORDER BY scheduledTime",
                     TestDrives.class
             );
             query.setParameter("currentTime", currentTime);
             query.setParameter("pendingStatus", TestDrives.Status.PENDING);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public TestDrives updateTestDriveStatus(Long testDriveId, TestDrives.Status newStatus) {
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
 
             TestDrives testDrive = getById(testDriveId);
             if (testDrive != null) {
@@ -120,19 +122,19 @@ public class TestDrivesDAOImpl extends CommonDAOImpl<TestDrives, Long> implement
 
             session.getTransaction().rollback();
             return null;
-        }
+
     }
 
     @Override
     public Collection<TestDrives> findByUserAndStatus(Users user, TestDrives.Status status) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<TestDrives> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<TestDrives> query = session.createQuery(
                     "FROM TestDrives WHERE user = :user AND status = :status ORDER BY scheduledTime",
                     TestDrives.class
             );
             query.setParameter("user", user);
             query.setParameter("status", status);
             return query.getResultList();
-        }
+
     }
 }

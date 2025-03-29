@@ -214,4 +214,125 @@ public class UsersDAOTest {
         assertNull(usersDAO.getById(testUser1.getId()));
         assertEquals(2, usersDAO.getAll().size());
     }
+
+    // Тест на null-параметры и граничные случаи
+    @Test
+    public void testNullAndBoundaryParameters() {
+        // 1. findByEmail с null
+        try {
+            Users result = usersDAO.findByEmail(null);
+            // Если не выбрасывает исключение, проверяем результат
+            assertNull(result, "При null email должен возвращаться null");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+            assertTrue(e instanceof IllegalArgumentException || e instanceof NullPointerException,
+                    "При null email может выбрасываться исключение");
+        }
+
+        // 2. findByRole с null
+        try {
+            Collection<Users> result = usersDAO.findByRole(null);
+            // Если не выбрасывает исключение, проверяем результат
+            assertTrue(result.isEmpty(), "При null role должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+            assertTrue(e instanceof IllegalArgumentException || e instanceof NullPointerException,
+                    "При null role может выбрасываться исключение");
+        }
+
+        // 3. findByFullNameContaining с null
+        try {
+            Collection<Users> result = usersDAO.findByFullNameContaining(null);
+            // Если не выбрасывает исключение, проверяем результат
+            assertTrue(result.isEmpty(), "При null name должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+            assertTrue(e instanceof IllegalArgumentException || e instanceof NullPointerException,
+                    "При null name может выбрасываться исключение");
+        }
+
+        // 4. getOrdersByUser с null ID
+        try {
+            Collection<Orders> result = usersDAO.getOrdersByUser(null);
+            // Если не выбрасывает исключение, проверяем результат
+            assertTrue(result.isEmpty(), "При null userId должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+            assertTrue(e instanceof IllegalArgumentException || e instanceof NullPointerException,
+                    "При null userId может выбрасываться исключение");
+        }
+
+        // 5. getTestDrivesByUser с null ID
+        try {
+            Collection<TestDrives> result = usersDAO.getTestDrivesByUser(null);
+            // Если не выбрасывает исключение, проверяем результат
+            assertTrue(result.isEmpty(), "При null userId должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+            assertTrue(e instanceof IllegalArgumentException || e instanceof NullPointerException,
+                    "При null userId может выбрасываться исключение");
+        }
+
+        // 6. getBuybacksByUser с null ID
+        try {
+            Collection<Buybacks> result = usersDAO.getBuybacksByUser(null);
+            // Если не выбрасывает исключение, проверяем результат
+            assertTrue(result.isEmpty(), "При null userId должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+            assertTrue(e instanceof IllegalArgumentException || e instanceof NullPointerException,
+                    "При null userId может выбрасываться исключение");
+        }
+    }
+
+    // Тест на несуществующие ID для методов getXxxByUser
+    @Test
+    public void testNonExistentUserIds() {
+        // Очень большой ID, который точно не существует
+        Long nonExistentId = 999999L;
+
+        // 1. getOrdersByUser с несуществующим ID
+        Collection<Orders> orders = usersDAO.getOrdersByUser(nonExistentId);
+        assertTrue(orders.isEmpty(), "Для несуществующего пользователя должна возвращаться пустая коллекция заказов");
+
+        // 2. getTestDrivesByUser с несуществующим ID
+        Collection<TestDrives> testDrives = usersDAO.getTestDrivesByUser(nonExistentId);
+        assertTrue(testDrives.isEmpty(), "Для несуществующего пользователя должна возвращаться пустая коллекция тест-драйвов");
+
+        // 3. getBuybacksByUser с несуществующим ID
+        Collection<Buybacks> buybacks = usersDAO.getBuybacksByUser(nonExistentId);
+        assertTrue(buybacks.isEmpty(), "Для несуществующего пользователя должна возвращаться пустая коллекция заявок на выкуп");
+    }
+
+    // Тест на граничные случаи для поиска по имени
+    @Test
+    public void testFindByFullNameEdgeCases() {
+        // 1. Поиск по пустой строке (должен вернуть всех пользователей)
+        Collection<Users> allUsers = usersDAO.findByFullNameContaining("");
+        assertEquals(2, allUsers.size(), "Поиск по пустой строке должен вернуть всех пользователей");
+
+        // 2. Поиск по одной букве
+        Collection<Users> usersWithI = usersDAO.findByFullNameContaining("и");
+        assertTrue(usersWithI.size() > 0, "Должны найтись пользователи с буквой 'и' в имени");
+
+        // 3. Поиск по строке с пробелами
+        Collection<Users> usersWithSpace = usersDAO.findByFullNameContaining(" ");
+        assertEquals(2, usersWithSpace.size(), "Должны найтись все пользователи с пробелами в имени");
+        
+    }
+
+    // Тест на кейс-чувствительность поиска по имени
+    @Test
+    public void testCaseInsensitiveNameSearch() {
+        // Тест на регистр букв (верхний регистр)
+        Collection<Users> upperCaseUsers = usersDAO.findByFullNameContaining("ИВАН");
+        assertEquals(1, upperCaseUsers.size(), "Должен найтись пользователь при поиске в верхнем регистре");
+        assertEquals(testUser1.getId(), upperCaseUsers.iterator().next().getId(), "Должен найтись правильный пользователь");
+
+        // Смешанный регистр
+        Collection<Users> mixedCaseUsers = usersDAO.findByFullNameContaining("иВаН");
+        assertEquals(1, mixedCaseUsers.size(), "Должен найтись пользователь при поиске в смешанном регистре");
+    }
+
+
 }

@@ -148,6 +148,15 @@ public class PromotionsDAOTest {
         Promotions promotion = promotions.iterator().next();
         assertEquals(testPromotion.getId(), promotion.getId(), "Promotion ID should match");
 
+        // Пытаемся удалить с ошибкой
+        promotionsDAO.removeCarFromPromotion(999L, testCar.getId());
+        promotions = promotionsDAO.findByCar(testCar);
+        assertFalse(promotions.isEmpty(), "Should find promotions for car");
+
+        promotionsDAO.removeCarFromPromotion(testPromotion.getId(), 999L);
+        promotions = promotionsDAO.findByCar(testCar);
+        assertFalse(promotions.isEmpty(), "Should find promotions for car");
+
         // Удаляем автомобиль из акции
         promotionsDAO.removeCarFromPromotion(testPromotion.getId(), testCar.getId());
 

@@ -172,8 +172,23 @@ public class OrdersDAOTest {
         assertEquals(Orders.Status.CANCELLED, updated.getStatus());
         assertEquals(Cars.Status.AVAILABLE, updated.getCar().getStatus());
 
+        // Проверяем обновление статуса на PROCESSING
+        updated = ordersDAO.updateOrderStatus(testOrder2.getId(), Orders.Status.PROCESSING);
+        assertNotNull(updated);
+        assertEquals(Orders.Status.PROCESSING, updated.getStatus());
+        assertEquals(Cars.Status.RESERVED, updated.getCar().getStatus());
+
+        // Проверяем обновление статуса на AWAITING_DELIVERY
+        updated = ordersDAO.updateOrderStatus(testOrder2.getId(), Orders.Status.AWAITING_DELIVERY);
+        assertNotNull(updated);
+        assertEquals(Orders.Status.AWAITING_DELIVERY, updated.getStatus());
+        assertEquals(Cars.Status.RESERVED, updated.getCar().getStatus());
+
         // Проверяем несуществующий заказ
         assertNull(ordersDAO.updateOrderStatus(999L, Orders.Status.PROCESSING));
+
+        // Проверяем несуществующий статус
+        assertNull(ordersDAO.updateOrderStatus(testOrder2.getId(), null));
     }
 
     @Test

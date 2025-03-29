@@ -18,77 +18,77 @@ public class ConsumerSpecsDAOImpl extends CommonDAOImpl<ConsumerSpecs, Long> imp
 
     @Override
     public ConsumerSpecs findByCar(Cars car) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<ConsumerSpecs> query = session.createQuery("FROM ConsumerSpecs WHERE car = :car", ConsumerSpecs.class);
+        Session session = sessionFactory.openSession();
+        Query<ConsumerSpecs> query = session.createQuery("FROM ConsumerSpecs WHERE car = :car", ConsumerSpecs.class);
             query.setParameter("car", car);
             return query.uniqueResult();
-        }
+
     }
 
     @Override
     public Collection<ConsumerSpecs> findByColor(String color) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<ConsumerSpecs> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<ConsumerSpecs> query = session.createQuery(
                     "FROM ConsumerSpecs WHERE color = :color",
                     ConsumerSpecs.class
             );
             query.setParameter("color", color);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<ConsumerSpecs> findByInteriorMaterial(String material) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<ConsumerSpecs> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<ConsumerSpecs> query = session.createQuery(
                     "FROM ConsumerSpecs WHERE interiorMaterial = :material",
                     ConsumerSpecs.class
             );
             query.setParameter("material", material);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<ConsumerSpecs> findByHasAirConditioning(boolean hasAC) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<ConsumerSpecs> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<ConsumerSpecs> query = session.createQuery(
                     "FROM ConsumerSpecs WHERE hasAirConditioning = :hasAC",
                     ConsumerSpecs.class
             );
             query.setParameter("hasAC", hasAC);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<ConsumerSpecs> findByHasMultimedia(boolean hasMultimedia) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<ConsumerSpecs> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<ConsumerSpecs> query = session.createQuery(
                     "FROM ConsumerSpecs WHERE hasMultimedia = :hasMultimedia",
                     ConsumerSpecs.class
             );
             query.setParameter("hasMultimedia", hasMultimedia);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<ConsumerSpecs> findByHasGps(boolean hasGps) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<ConsumerSpecs> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<ConsumerSpecs> query = session.createQuery(
                     "FROM ConsumerSpecs WHERE hasGps = :hasGps",
                     ConsumerSpecs.class
             );
             query.setParameter("hasGps", hasGps);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<ConsumerSpecs> findByMultipleFeatures(boolean hasAC, boolean hasMultimedia, boolean hasGps) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<ConsumerSpecs> query = session.createQuery(
+        Session session = sessionFactory.openSession();
+        Query<ConsumerSpecs> query = session.createQuery(
                     "FROM ConsumerSpecs WHERE hasAirConditioning = :hasAC AND hasMultimedia = :hasMultimedia AND hasGps = :hasGps",
                     ConsumerSpecs.class
             );
@@ -96,14 +96,14 @@ public class ConsumerSpecsDAOImpl extends CommonDAOImpl<ConsumerSpecs, Long> imp
             query.setParameter("hasMultimedia", hasMultimedia);
             query.setParameter("hasGps", hasGps);
             return query.getResultList();
-        }
+
     }
 
     @Override
     public ConsumerSpecs updateConsumerSpecs(Long carId, String color, String interiorMaterial,
                                              boolean hasAC, boolean hasMultimedia, boolean hasGps) {
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
 
             ConsumerSpecs specs = getById(carId);
             if (specs != null) {
@@ -120,13 +120,13 @@ public class ConsumerSpecsDAOImpl extends CommonDAOImpl<ConsumerSpecs, Long> imp
 
             session.getTransaction().rollback();
             return null;
-        }
+
     }
 
     @Override
     public Collection<String> findPopularColors(int limit) {
-        try (Session session = sessionFactory.openSession()) {
-            // Запрос на получение популярных цветов автомобилей
+        Session session = sessionFactory.openSession();
+        // Запрос на получение популярных цветов автомобилей
             Query<String> query = session.createQuery(
                     "SELECT cs.color FROM ConsumerSpecs cs " +
                             "GROUP BY cs.color " +
@@ -135,6 +135,6 @@ public class ConsumerSpecsDAOImpl extends CommonDAOImpl<ConsumerSpecs, Long> imp
             );
             query.setMaxResults(limit);
             return query.getResultList();
-        }
+
     }
 }

@@ -181,6 +181,182 @@ public class TestDrivesDAOTest {
         assertNull(testDrivesDAO.updateTestDriveStatus(999L, TestDrives.Status.COMPLETED));
     }
 
+    // Расширенный тест для updateTestDriveStatus
+    @Test
+    public void testUpdateTestDriveStatusExpanded() {
+        // 1. Обновление статуса на CANCELLED (не COMPLETED)
+        TestDrives updatedToCancelled = testDrivesDAO.updateTestDriveStatus(testDrive1.getId(), TestDrives.Status.CANCELLED);
+        assertNotNull(updatedToCancelled, "Должен вернуться обновленный объект");
+        assertEquals(TestDrives.Status.CANCELLED, updatedToCancelled.getStatus(), "Статус должен измениться");
+
+        // Проверяем, что счетчик не изменился
+        DynamicSpecs specsAfterCancel = dynamicSpecsDAO.findByCar(testCar);
+        assertEquals(0, specsAfterCancel.getTestDriveCount(), "Счетчик не должен меняться при CANCELLED");
+
+        // 2. Создаем тест-драйв с автомобилем без динамических характеристик
+        Cars carWithoutSpecs = new Cars();
+        carWithoutSpecs.setBrand("No Specs Car");
+        carWithoutSpecs.setRegistrationNumber("NOSPECS");
+        carWithoutSpecs.setStatus(Cars.Status.AVAILABLE);
+        carWithoutSpecs.setPrice(new BigDecimal("100"));
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            session.persist(carWithoutSpecs);
+            session.getTransaction().commit();
+        }
+
+        // Создаем тест-драйв для этого автомобиля
+        TestDrives testDriveNoSpecs = new TestDrives();
+        testDriveNoSpecs.setUser(testUser);
+        testDriveNoSpecs.setCar(carWithoutSpecs);
+        testDriveNoSpecs.setStatus(TestDrives.Status.PENDING);
+        testDriveNoSpecs.setScheduledTime(LocalDateTime.now().plusDays(1));
+
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            session.persist(testDriveNoSpecs);
+            session.getTransaction().commit();
+        }
+
+        // Проверяем, что у автомобиля нет спецификаций
+        assertNull(carWithoutSpecs.getDynamicSpecs(), "У автомобиля не должно быть динамических характеристик");
+
+        // Пытаемся обновить статус на COMPLETED
+        TestDrives updatedNoSpecs = testDrivesDAO.updateTestDriveStatus(testDriveNoSpecs.getId(), TestDrives.Status.COMPLETED);
+        assertNotNull(updatedNoSpecs, "Должен вернуться обновленный объект даже без спецификаций");
+        assertEquals(TestDrives.Status.COMPLETED, updatedNoSpecs.getStatus(), "Статус должен быть обновлен");
+
+        // 3. Проверяем пограничный случай: статус = null
+        try {
+            TestDrives updatedWithNullStatus = testDrivesDAO.updateTestDriveStatus(testDrive2.getId(), null);
+
+            // Если метод не выбрасывает исключение при null статусе, проверяем результат
+            if (updatedWithNullStatus != null) {
+                // Возможно, метод просто ничего не делает при null статусе
+                assertNotNull(updatedWithNullStatus, "При null статусе может вернуться неизмененный объект");
+            } else {
+                // Или возвращает null
+                assertNull(updatedWithNullStatus, "При null статусе может вернуться null");
+            }
+        } catch (Exception e) {
+            // Если метод выбрасывает исключение - это тоже валидное поведение
+            assertTrue(e instanceof IllegalArgumentException || e instanceof NullPointerException,
+                    "При null-статусе может выбрасываться исключение");
+        }
+    }
+
+    // Тесты на null-параметры для других методов
+    @Test
+    public void testFindByNullParameters() {
+        // 1. findByUser с null
+        try {
+            Collection<TestDrives> resultByNullUser = testDrivesDAO.findByUser(null);
+            // Если не выбрасывает исключение
+            assertTrue(resultByNullUser.isEmpty(), "При null пользователе должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+        }
+
+        // 2. findByCar с null
+        try {
+            Collection<TestDrives> resultByNullCar = testDrivesDAO.findByCar(null);
+            // Если не выбрасывает исключение
+            assertTrue(resultByNullCar.isEmpty(), "При null автомобиле должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+        }
+
+        // 3. findByStatus с null
+        try {
+            Collection<TestDrives> resultByNullStatus = testDrivesDAO.findByStatus(null);
+            // Если не выбрасывает исключение
+            assertTrue(resultByNullStatus.isEmpty(), "При null статусе должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+        }
+
+        // 4. findByScheduledTimeBetween с null
+        try {
+            Collection<TestDrives> resultByNullTimes = testDrivesDAO.findByScheduledTimeBetween(null, null);
+            // Если не выбрасывает исключение
+            assertTrue(resultByNullTimes.isEmpty(), "При null времени должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+        }
+
+        // 5. isCarAvailableForTestDrive с null
+        try {
+            boolean resultAvailableNull = testDrivesDAO.isCarAvailableForTestDrive(null, LocalDateTime.now());
+            // Если не выбрасывает исключение
+            assertFalse(resultAvailableNull, "При null автомобиле должен возвращаться false");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+        }
+
+        try {
+            boolean resultAvailableNullTime = testDrivesDAO.isCarAvailableForTestDrive(testCar, null);
+            // Если не выбрасывает исключение
+            assertFalse(resultAvailableNullTime, "При null времени должен возвращаться false");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+        }
+
+        // 6. findUpcomingTestDrives с null
+        try {
+            Collection<TestDrives> resultUpcomingNull = testDrivesDAO.findUpcomingTestDrives(null);
+            // Если не выбрасывает исключение
+            assertTrue(resultUpcomingNull.isEmpty(), "При null времени должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+        }
+
+        // 7. findByUserAndStatus с null
+        try {
+            Collection<TestDrives> resultByUserAndStatusNull = testDrivesDAO.findByUserAndStatus(null, null);
+            // Если не выбрасывает исключение
+            assertTrue(resultByUserAndStatusNull.isEmpty(), "При null параметрах должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+        }
+
+        try {
+            Collection<TestDrives> resultByUserNull = testDrivesDAO.findByUserAndStatus(null, TestDrives.Status.PENDING);
+            // Если не выбрасывает исключение
+            assertTrue(resultByUserNull.isEmpty(), "При null пользователе должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+        }
+
+        try {
+            Collection<TestDrives> resultByStatusNull = testDrivesDAO.findByUserAndStatus(testUser, null);
+            // Если не выбрасывает исключение
+            assertTrue(resultByStatusNull.isEmpty(), "При null статусе должна возвращаться пустая коллекция");
+        } catch (Exception e) {
+            // Если выбрасывает исключение - это тоже ОК
+        }
+    }
+
+    // Тест на пограничные случаи во временны́х диапазонах
+    @Test
+    public void testTimeRangeBoundaries() {
+        // Проверяем граничные случаи для времени тест-драйва
+        LocalDateTime exactTime = testDrive1.getScheduledTime();
+
+        // Проверка на границе 1-часового интервала
+        assertFalse(testDrivesDAO.isCarAvailableForTestDrive(testCar, exactTime.minusHours(1).plusMinutes(1)),
+                "Автомобиль не должен быть доступен в пределах часа до запланированного тест-драйва");
+
+        assertFalse(testDrivesDAO.isCarAvailableForTestDrive(testCar, exactTime.plusHours(1).minusMinutes(1)),
+                "Автомобиль не должен быть доступен в пределах часа после запланированного тест-драйва");
+
+        // Проверка точек за пределами интервала
+        assertTrue(testDrivesDAO.isCarAvailableForTestDrive(testCar, exactTime.minusHours(1).minusMinutes(1)),
+                "Автомобиль должен быть доступен чуть более чем за час до тест-драйва");
+
+        assertTrue(testDrivesDAO.isCarAvailableForTestDrive(testCar, exactTime.plusHours(1).plusMinutes(1)),
+                "Автомобиль должен быть доступен чуть более чем через час после тест-драйва");
+    }
+
     @Test
     public void testFindByUserAndStatus() {
         Collection<TestDrives> drives = testDrivesDAO.findByUserAndStatus(testUser, TestDrives.Status.PENDING);

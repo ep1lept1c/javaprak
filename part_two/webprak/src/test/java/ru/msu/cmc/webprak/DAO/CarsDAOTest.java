@@ -325,4 +325,121 @@ public class CarsDAOTest {
         // Несуществующая акция
         assertNull(carsDAO.addPromotionToCar(testCar1.getId(), 999L));
     }
+
+    // Добавьте эти тесты в ваш класс CarsDAOTest
+
+    // Тест на передачу null-параметров в getTechnicalSpecs, getConsumerSpecs и getDynamicSpecs
+    @Test
+    public void testGetSpecsWithNullId() {
+        // Проверка null ID для каждого метода получения характеристик
+        assertNull(carsDAO.getTechnicalSpecs(null));
+        assertNull(carsDAO.getConsumerSpecs(null));
+        assertNull(carsDAO.getDynamicSpecs(null));
+    }
+
+    // Тест на передачу null-параметров в updateTechnicalSpecs
+    @Test
+    public void testUpdateTechnicalSpecsWithNullParams() {
+        // Проверка null carId
+        assertNull(carsDAO.updateTechnicalSpecs(null, new TechnicalSpecs()));
+
+        // Проверка null specs
+        assertNull(carsDAO.updateTechnicalSpecs(testCar1.getId(), null));
+
+        // Проверка обоих null параметров
+        assertNull(carsDAO.updateTechnicalSpecs(null, null));
+    }
+
+    // Тест на обновление статуса с null статусом
+    @Test
+    public void testUpdateStatusWithNullStatus() {
+        assertNull(carsDAO.updateStatus(testCar1.getId(), null));
+    }
+
+    // Тест на расширенный поиск с невалидным типом топлива
+    @Test
+    public void testFindWithAdvancedSearchInvalidFuelType() {
+        // Поиск с невалидным типом топлива (который вызовет IllegalArgumentException)
+        Collection<Cars> results = carsDAO.findWithAdvancedSearch(
+                null, null, null, null, null, "INVALID_FUEL_TYPE", null);
+
+        // Проверяем, что метод обработал исключение и вернул пустой список
+        assertTrue(results.isEmpty());
+    }
+
+    // Тест на расширенный поиск с проверкой всех возможных параметров
+    @Test
+    public void testFindWithAdvancedSearchAllParameters() {
+        // Настраиваем тестовый автомобиль для точного совпадения
+        testCar1.setBrand("TestBrand");
+        testCar1.setPrice(new BigDecimal("25000.00"));
+        testCar1.setStatus(Cars.Status.AVAILABLE);
+        testCar1.getConsumerSpecs().setHasAirConditioning(true);
+        testCar1.getConsumerSpecs().setColor("Red");
+        testCar1.getTechnicalSpecs().setFuelType(TechnicalSpecs.FuelType.PETROL);
+        carsDAO.update(testCar1);
+
+        // Поиск со всеми параметрами
+        Collection<Cars> results = carsDAO.findWithAdvancedSearch(
+                "TestBrand",                   // brand
+                new BigDecimal("20000.00"),    // minPrice
+                new BigDecimal("30000.00"),    // maxPrice
+                Cars.Status.AVAILABLE,         // status
+                true,                          // hasAC
+                "PETROL",                      // fuelType
+                "Red"                          // color
+        );
+
+        assertEquals(1, results.size());
+        assertEquals(testCar1.getId(), results.iterator().next().getId());
+    }
+
+    // Тест на пустой бренд в расширенном поиске
+    @Test
+    public void testFindWithAdvancedSearchEmptyBrand() {
+        // Поиск с пустым брендом (должен быть проигнорирован)
+        Collection<Cars> results = carsDAO.findWithAdvancedSearch(
+                "",                            // пустой бренд
+                null, null, null, null, null, null);
+
+        assertEquals(2, results.size());  // Должны найтись все автомобили
+    }
+
+    // Тест на пустой цвет в расширенном поиске
+    @Test
+    public void testFindWithAdvancedSearchEmptyColor() {
+        // Настраиваем цвет тестового автомобиля
+        testCar1.getConsumerSpecs().setColor("Blue");
+        carsDAO.update(testCar1);
+
+        // Поиск с пустым цветом (должен быть проигнорирован)
+        Collection<Cars> results = carsDAO.findWithAdvancedSearch(
+                null, null, null, null, null, null, "");
+
+        assertEquals(2, results.size());  // Должны найтись все автомобили
+    }
+
+    // Тест на поиск по акции с null значением
+    @Test
+    public void testFindByPromotionNull() {
+        try {
+            Collection<Cars> cars = carsDAO.findByPromotion(null);
+            // Если метод обрабатывает null без исключения, проверяем результат
+            assertTrue(cars.isEmpty());
+        } catch (Exception e) {
+            // Если метод выбрасывает исключение, это тоже валидное поведение для тестирования
+            assertTrue(e instanceof IllegalArgumentException || e instanceof NullPointerException);
+        }
+    }
+
+    // Тест на случай, когда в getCarCountByBrand нет автомобилей
+    @Test
+    public void testGetCarCountByBrandEmptyDatabase() {
+        // Очищаем базу данных
+        clearDatabase();
+
+        // Проверяем, что метод корректно обрабатывает отсутствие данных
+        Map<String, Long> counts = carsDAO.getCarCountByBrand();
+        assertTrue(counts.isEmpty());
+    }
 }

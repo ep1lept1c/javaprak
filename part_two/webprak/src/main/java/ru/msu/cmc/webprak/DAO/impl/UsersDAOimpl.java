@@ -21,35 +21,34 @@ public class UsersDAOImpl extends CommonDAOImpl<Users, Long> implements UsersDAO
 
     @Override
     public Users findByEmail(String email) {
-        try (Session session = sessionFactory.openSession()) {
+        Session session = sessionFactory.openSession();
             Query<Users> query = session.createQuery("FROM Users WHERE email = :email", Users.class);
             query.setParameter("email", email);
             return query.uniqueResult();
-        }
+
     }
 
     @Override
     public Collection<Users> findByRole(Users.Role role) {
-        try (Session session = sessionFactory.openSession()) {
-            Query<Users> query = session.createQuery("FROM Users WHERE role = :role", Users.class);
+        Session session = sessionFactory.openSession();
+         Query<Users> query = session.createQuery("FROM Users WHERE role = :role", Users.class);
             query.setParameter("role", role);
             return query.getResultList();
-        }
     }
 
     @Override
     public Collection<Users> findByFullNameContaining(String name) {
-        try (Session session = sessionFactory.openSession()) {
+        Session session = sessionFactory.openSession();
             Query<Users> query = session.createQuery("FROM Users WHERE lower(fullName) LIKE :name", Users.class);
             query.setParameter("name", "%" + name.toLowerCase() + "%");
             return query.getResultList();
-        }
+
     }
 
     @Override
     public Collection<Orders> getOrdersByUser(Long userId) {
-        try (Session session = sessionFactory.openSession()) {
-            Users user = getById(userId);
+        Session session = sessionFactory.openSession();
+         Users user = getById(userId);
             if (user != null) {
                 Query<Orders> query = session.createQuery(
                         "FROM Orders WHERE user = :user", Orders.class);
@@ -57,12 +56,12 @@ public class UsersDAOImpl extends CommonDAOImpl<Users, Long> implements UsersDAO
                 return query.getResultList();
             }
             return Collections.emptyList();
-        }
+
     }
 
     @Override
     public Collection<TestDrives> getTestDrivesByUser(Long userId) {
-        try (Session session = sessionFactory.openSession()) {
+        Session session = sessionFactory.openSession();
             Users user = getById(userId);
             if (user != null) {
                 Query<TestDrives> query = session.createQuery(
@@ -71,12 +70,12 @@ public class UsersDAOImpl extends CommonDAOImpl<Users, Long> implements UsersDAO
                 return query.getResultList();
             }
             return Collections.emptyList();
-        }
+
     }
 
     @Override
     public Collection<Buybacks> getBuybacksByUser(Long userId) {
-        try (Session session = sessionFactory.openSession()) {
+        Session session = sessionFactory.openSession();
             Users user = getById(userId);
             if (user != null) {
                 Query<Buybacks> query = session.createQuery(
@@ -85,6 +84,6 @@ public class UsersDAOImpl extends CommonDAOImpl<Users, Long> implements UsersDAO
                 return query.getResultList();
             }
             return Collections.emptyList();
-        }
+
     }
 }

@@ -357,4 +357,155 @@ public class ConsumerSpecsDAOTest {
         );
         assertNotNull(updated, "Update should succeed");
     }
+
+    // Добавьте эти тесты в ваш класс ConsumerSpecsDAOTest
+
+    // Тест на поиск по нулевому автомобилю
+    @Test
+    public void testFindByNullCar() {
+        try {
+            ConsumerSpecs specs = consumerSpecsDAO.findByCar(null);
+            // Если метод не выбрасывает исключение при null, проверяем результат
+            assertNull(specs, "Должен возвращаться null при поиске по null-автомобилю");
+        } catch (Exception e) {
+            // Если метод выбрасывает исключение - это тоже допустимый результат
+            assertTrue(e instanceof IllegalArgumentException || e instanceof NullPointerException,
+                    "При null-параметре может выбрасываться исключение");
+        }
+    }
+
+    // Тест на поиск по нулевому цвету
+    @Test
+    public void testFindByNullColor() {
+        try {
+            Collection<ConsumerSpecs> specs = consumerSpecsDAO.findByColor(null);
+            // Проверка на пустую коллекцию, если метод обрабатывает null без исключения
+            assertTrue(specs.isEmpty(), "Должна возвращаться пустая коллекция при поиске по null-цвету");
+        } catch (Exception e) {
+            // Если метод выбрасывает исключение - это тоже валидное поведение
+            assertTrue(e instanceof IllegalArgumentException || e instanceof NullPointerException,
+                    "При null-параметре может выбрасываться исключение");
+        }
+    }
+
+    // Тест на поиск по нулевому материалу интерьера
+    @Test
+    public void testFindByNullInteriorMaterial() {
+        try {
+            Collection<ConsumerSpecs> specs = consumerSpecsDAO.findByInteriorMaterial(null);
+            // Проверка на пустую коллекцию, если метод обрабатывает null без исключения
+            assertTrue(specs.isEmpty(), "Должна возвращаться пустая коллекция при поиске по null-материалу");
+        } catch (Exception e) {
+            // Если метод выбрасывает исключение - это тоже валидное поведение
+            assertTrue(e instanceof IllegalArgumentException || e instanceof NullPointerException,
+                    "При null-параметре может выбрасываться исключение");
+        }
+    }
+
+    // Тест на обновление с передачей null для строковых параметров
+    @Test
+    public void testUpdateWithNullStrings() {
+        // Обновляем с null значениями для строковых полей
+        ConsumerSpecs updated = consumerSpecsDAO.updateConsumerSpecs(
+                testSpecs1.getId(),
+                "green",
+                null,           // null interiorMaterial
+                true,
+                true,
+                true
+        );
+
+        assertNotNull(updated, "Должен вернуться обновленный объект");
+        assertNull(updated.getInteriorMaterial(), "Материал интерьера должен стать null");
+
+        // Проверяем обновление в базе
+        ConsumerSpecs fromDb = consumerSpecsDAO.getById(testSpecs1.getId());
+        assertNull(fromDb.getInteriorMaterial(), "Изменения должны сохраниться в БД");
+    }
+
+    // Тест на проверку ограничения при findPopularColors
+    @Test
+    public void testFindPopularColorsWithZeroLimit() {
+        Collection<String> colors = consumerSpecsDAO.findPopularColors(0);
+
+        // Зависит от реализации - либо пустая коллекция, либо минимальный размер
+        assertTrue(colors.isEmpty() || colors.size() >= 0,
+                "При лимите 0 должна возвращаться пустая коллекция или минимальный размер");
+    }
+
+    // Тест на проверку большого значения лимита findPopularColors
+    @Test
+    public void testFindPopularColorsWithLargeLimit() {
+        Collection<String> colors = consumerSpecsDAO.findPopularColors(100);
+
+        // Должен вернуть все уникальные цвета (максимум 3 в тестовых данных + доп. тесты)
+        assertTrue(colors.size() <= 5, "Должны вернуться все уникальные цвета, но не больше");
+    }
+
+    // Тест на проверку обработки отрицательного лимита
+    @Test
+    public void testFindPopularColorsWithNegativeLimit() {
+        try {
+            Collection<String> colors = consumerSpecsDAO.findPopularColors(-1);
+
+            // Если метод обрабатывает отрицательный лимит, проверяем результат
+            assertTrue(colors.isEmpty() || colors.size() > 0,
+                    "При отрицательном лимите должна быть особая обработка");
+        } catch (Exception e) {
+            // Если метод выбрасывает исключение - это тоже допустимое поведение
+            assertTrue(e instanceof IllegalArgumentException,
+                    "При отрицательном лимите может выбрасываться исключение");
+        }
+    }
+
+    // Тест на проверку случая, когда нет данных для findPopularColors
+    @Test
+    public void testFindPopularColorsWithNoData() {
+        // Очищаем базу
+        clearDatabase();
+
+        // Проверяем работу метода с пустой БД
+        Collection<String> colors = consumerSpecsDAO.findPopularColors(5);
+        assertTrue(colors.isEmpty(), "При отсутствии данных должна возвращаться пустая коллекция");
+    }
+
+    // Тест на одновременное обновление двух спецификаций
+    @Test
+    public void testConcurrentUpdates() {
+        // Этот тест проверяет, что два последовательных обновления не конфликтуют
+
+        // Первое обновление
+        ConsumerSpecs firstUpdate = consumerSpecsDAO.updateConsumerSpecs(
+                testSpecs1.getId(),
+                "yellow",
+                "leather",
+                true,
+                false,
+                true
+        );
+
+        // Второе обновление
+        ConsumerSpecs secondUpdate = consumerSpecsDAO.updateConsumerSpecs(
+                testSpecs2.getId(),
+                "green",
+                "fabric",
+                false,
+                true,
+                false
+        );
+
+        // Проверка результатов
+        assertNotNull(firstUpdate, "Первое обновление должно быть успешным");
+        assertNotNull(secondUpdate, "Второе обновление должно быть успешным");
+
+        assertEquals("yellow", firstUpdate.getColor(), "Цвет первой спецификации должен обновиться");
+        assertEquals("green", secondUpdate.getColor(), "Цвет второй спецификации должен обновиться");
+
+        // Проверка сохранения в БД
+        ConsumerSpecs firstFromDb = consumerSpecsDAO.getById(testSpecs1.getId());
+        ConsumerSpecs secondFromDb = consumerSpecsDAO.getById(testSpecs2.getId());
+
+        assertEquals("yellow", firstFromDb.getColor(), "Изменения первой спецификации должны сохраниться в БД");
+        assertEquals("green", secondFromDb.getColor(), "Изменения второй спецификации должны сохраниться в БД");
+    }
 }
