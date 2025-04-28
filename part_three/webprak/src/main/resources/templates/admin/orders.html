@@ -1,0 +1,99 @@
+<th:block th:fragment="content">
+  <!-- Фильтры -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form th:action="@{/admin/orders}" method="get">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Статус</label>
+            <select name="status" class="form-select">
+              <option value="">Все</option>
+              <option th:each="s : ${statuses}"
+                      th:value="${s}"
+                      th:text="${s}"></option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Дата от</label>
+            <input type="date" name="dateFrom" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Дата до</label>
+            <input type="date" name="dateTo" class="form-control">
+          </div>
+          <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Применить</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Таблица заказов -->
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+          <tr>
+            <th>№</th>
+            <th>Клиент</th>
+            <th>Дата</th>
+            <th>Автомобиль</th>
+            <th>Сумма</th>
+            <th>Статус</th>
+            <th>Действия</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="order : ${orders}">
+            <td th:text="${order.id}"></td>
+            <td th:text="${order.user.fullName}"></td>
+            <td th:text="${#temporals.format(order.orderDate, 'dd.MM.yyyy')}"></td>
+            <td>
+              <span th:text="${order.car.brand} + ' ' + ${order.car.manufacturer}"></span>
+            </td>
+            <td th:text="${#numbers.formatDecimal(order.car.price, 0, 'WHITESPACE', 2, 'POINT')} + ' ₽'"></td>
+            <td>
+                                <span th:text="${order.status}"
+                                      th:class="'badge bg-' +
+                                      ${order.status == 'COMPLETED'} ? 'success' :
+                                      ${order.status == 'CANCELLED'} ? 'danger' : 'warning'"></span>
+            </td>
+            <td>
+              <select class="form-select form-select-sm"
+                      onchange="updateOrderStatus(this, th:attr='data-id=${order.id}')">
+                <option th:each="s : ${statuses}"
+                        th:value="${s}"
+                        th:selected="${s == order.status}"
+                        th:text="${s}"></option>
+              </select>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+  <script>
+    function updateOrderStatus(select, orderId) {
+      fetch('/admin/orders/update-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `orderId=${orderId}&newStatus=${select.value}`
+      }).then(() => {
+        const badge = select.closest('tr').querySelector('.badge');
+        badge.textContent = select.value;
+        badge.className = `badge bg-${
+                select.value === 'COMPLETED' ? 'success' :
+                        select.value === 'CANCELLED' ? 'danger' : 'warning'
+        }`;
+      });
+    }
+  </script>
+</th:block>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Главная | Автосалон</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<!-- Навигация (можно вынести в отдельный фрагмент) -->
+<div th:replace="fragments/navbar :: navbar"></div>
+
+<div class="container mt-4">
+  <!-- Секция акций -->
+  <h2 class="mb-4">Топ акции</h2>
+  <div class="row">
+    <div th:each="promotion : ${promotions}" class="col-md-4 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title" th:text="${promotion.title}"></h5>
+          <p class="card-text" th:text="${promotion.description}"></p>
+          <p class="text-success fw-bold" th:text="'Скидка: ' + ${promotion.discount} + '%'"></p>
+          <small class="text-muted"
+                 th:text="'Действует до: ' + ${#temporals.format(promotion.endDate, 'dd.MM.yyyy')}"></small>
+        </div>
+        <div class="card-footer text-center">
+          <div th:each="car : ${promotion.cars}">
+            <a th:href="@{'/cars/' + ${car.carId}}" class="btn btn-outline-primary" th:text="'Посмотреть ' + ${car.brand} + ' ' + ${car.manufacturer}"></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Секция популярных авто -->
+  <h2 class="mb-4">Популярные автомобили</h2>
+  <div class="row">
+    <div th:each="car : ${cars}" class="col-md-4 mb-4">
+      <div class="card h-100 car-card">
+        <img th:src="@{'/images/' + ${car.brand} + '_' + ${car.manufacturer} + '_' + ${car.registrationNumber} + '.png'}"
+             class="card-img-top" alt="Фото автомобиля">
+        <div class="card-body">
+          <h5 class="card-title" th:text="${car.brand}"></h5>
+          <a th:href="@{'/cars/' + ${car.id}}" class="btn btn-primary">Подробнее</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Футер (можно вынести в отдельный фрагмент) -->
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

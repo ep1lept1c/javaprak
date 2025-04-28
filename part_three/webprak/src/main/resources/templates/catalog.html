@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Каталог авто | Автосалон</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    .filter-section {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .advanced-filters {
+      display: none; /* Скрыты по умолчанию */
+      margin-top: 15px;
+    }
+    .car-card {
+      transition: transform 0.3s;
+    }
+    .car-card:hover {
+      transform: translateY(-5px);
+    }
+  </style>
+</head>
+<body>
+<!-- Навигация -->
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container my-5">
+  <h1 class="mb-4">Каталог автомобилей</h1>
+
+  <!-- Фильтры -->
+  <div class="filter-section">
+    <form th:action="@{/catalog}" method="get">
+      <div class="row g-3">
+        <!-- Бренд -->
+        <div class="col-md-3">
+          <label class="form-label">Бренд</label>
+          <select name="brand" class="form-select">
+            <option value="">Все</option>
+            <option th:each="brand : ${brands}"
+                    th:value="${brand}"
+                    th:text="${brand}">
+            </option>
+          </select>
+        </div>
+
+        <!-- Цена -->
+        <div class="col-md-3">
+          <label class="form-label">Цена (₽)</label>
+          <div class="input-group">
+            <input type="number" name="minPrice" class="form-control" placeholder="От">
+            <input type="number" name="maxPrice" class="form-control" placeholder="До">
+          </div>
+        </div>
+
+        <!-- Статус -->
+        <div class="col-md-2">
+          <label class="form-label">Статус</label>
+          <select name="status" class="form-select">
+            <option value="">Все</option>
+            <option th:each="status : ${statuses}"
+                    th:value="${status}"
+                    th:text="${status}">
+            </option>
+          </select>
+        </div>
+
+        <!-- Кнопки -->
+        <div class="col-md-4 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary me-2">Применить</button>
+          <button type="button" class="btn btn-outline-secondary"
+                  onclick="toggleAdvancedFilters()">
+            Доп. фильтры
+          </button>
+        </div>
+      </div>
+
+      <!-- Доп. фильтры (скрыты) -->
+      <div id="advancedFilters" class="advanced-filters">
+        <div class="row mt-3 g-3">
+          <!-- Кондиционер -->
+          <div class="col-md-3">
+            <label class="form-label">Кондиционер</label>
+            <select name="hasAC" class="form-select">
+              <option value="">Не важно</option>
+              <option value="true">Есть</option>
+              <option value="false">Нет</option>
+            </select>
+          </div>
+
+<!--          &lt;!&ndash; Коробка передач &ndash;&gt;-->
+<!--          <div class="col-md-3">-->
+<!--            <label class="form-label">Коробка</label>-->
+<!--            <select name="automaticTransmission" class="form-select">-->
+<!--              <option value="">Не важно</option>-->
+<!--              <option value="true">Автомат</option>-->
+<!--              <option value="false">Механика</option>-->
+<!--            </select>-->
+<!--          </div>-->
+
+          <!-- Тип топлива -->
+          <div class="col-md-3">
+            <label class="form-label">Топливо</label>
+            <select name="fuelType" class="form-select">
+              <option value="">Все</option>
+              <option th:each="type : ${fuelTypes}"
+                      th:value="${type}"
+                      th:text="${type}">
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Сортировка -->
+  <div class="d-flex justify-content-end mb-4">
+    <div class="btn-group">
+      <a th:href="@{/catalog(sort='priceDesc')}"
+         class="btn btn-outline-dark ${sort == 'priceDesc' ? 'active' : ''}">
+        Сначала дорогие
+      </a>
+      <a th:href="@{/catalog(sort='priceAsc')}"
+         class="btn btn-outline-dark ${sort == 'priceAsc' ? 'active' : ''}">
+        Сначала дешевые
+      </a>
+    </div>
+  </div>
+
+  <!-- Список авто -->
+  <div class="row">
+    <div th:each="car : ${cars}" class="col-md-4 mb-4">
+      <div class="card h-100 car-card">
+        <img th:src="@{'/images/' + ${car.brand} + '_' + ${car.manufacturer} + '_' + ${car.registrationNumber} + '.png'}"
+             class="card-img-top" alt="Фото автомобиля">
+        <div class="card-body">
+          <h5 class="card-title" th:text="${car.brand} + ' ' + ${car.manufacturer}"></h5>
+
+          <!-- Блок с ценами -->
+          <div th:if="${car.hasDiscount}">
+            <p class="text-muted fw-bold fs-4 mb-0">
+              <s th:text="${#numbers.formatDecimal(car.originalPrice, 0, 'WHITESPACE', 2, 'POINT')} + ' ₽'"></s>
+            </p>
+            <p class="text-success fw-bold fs-3">
+              <span th:text="${#numbers.formatDecimal(car.discountedPrice, 0, 'WHITESPACE', 2, 'POINT')} + ' ₽'"></span>
+              <span class="badge bg-danger ms-2"
+                    th:text="'-' + ${#numbers.formatDecimal(car.totalDiscount, 1, 'POINT', 2, 'POINT')} + '%'"></span>
+            </p>
+          </div>
+          <div th:unless="${car.hasDiscount}">
+            <p class="text-success fw-bold fs-3"
+               th:text="${#numbers.formatDecimal(car.discountedPrice, 0, 'WHITESPACE', 2, 'POINT')} + ' ₽'"></p>
+          </div>
+
+          <a th:href="@{'/cars/' + ${car.id}}" class="btn btn-primary mt-2">Подробнее</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Футер -->
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<!-- Скрипт для раскрытия доп. фильтров -->
+<script>
+  function toggleAdvancedFilters() {
+    const filters = document.getElementById('advancedFilters');
+    filters.style.display = filters.style.display === 'none' ? 'block' : 'none';
+  }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

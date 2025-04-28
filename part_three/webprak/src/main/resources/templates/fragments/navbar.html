@@ -1,0 +1,31 @@
+<!-- templates/fragments/navbar.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm"
+     th:fragment="navbar">
+  <div class="container">
+    <a class="navbar-brand" th:href="@{/}">Автосалон</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/catalog}">Каталог</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/buyback}">Выкуп авто</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/contacts}">Контакты</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/profile}">Личный кабинет</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+</body>
+</html>

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Оформление заказа</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .step {
+            display: none;
+        }
+        .step.active {
+            display: block;
+        }
+        .nav-steps .nav-item {
+            position: relative;
+            padding: 0 15px;
+        }
+        .nav-steps .nav-item::after {
+            content: "→";
+            position: absolute;
+            right: -5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .nav-steps .nav-item:last-child::after {
+            content: none;
+        }
+        .nav-steps .nav-link {
+            color: #6c757d;
+        }
+        .nav-steps .nav-link.active {
+            color: #0d6efd;
+            font-weight: bold;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+        .was-validated .form-control:invalid {
+            border-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+<!-- Навигация -->
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container my-5">
+    <!-- Шаги -->
+    <ul class="nav nav-steps justify-content-center mb-5">
+        <li class="nav-item">
+            <a class="nav-link" data-step="1" th:classappend="${currentStep == 1} ? 'active' : ''">1. Автомобиль</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-step="2" th:classappend="${currentStep == 2} ? 'active' : ''">2. Тест-драйв</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-step="3" th:classappend="${currentStep == 3} ? 'active' : ''">3. Данные</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-step="4" th:classappend="${currentStep == 4} ? 'active' : ''">4. Подтверждение</a>
+        </li>
+    </ul>
+
+    <!-- Сообщения об ошибках -->
+    <div th:if="${error}" class="alert alert-danger mb-4">
+        <i class="bi bi-exclamation-circle"></i> <span th:text="${error}"></span>
+    </div>
+
+
+    <!-- Форма -->
+    <form th:action="@{/order/submit}" method="post" id="orderForm">
+        <input type="hidden" name="carId" th:value="${car.carId}">
+        <input type="hidden" id="currentStepInput" name="currentStep" th:value="${currentStep}">
+        <!-- Шаг 1: Автомобиль -->
+        <div class="step" id="step1" th:classappend="${currentStep == 1} ? 'active' : ''">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 th:text="${car.brand} + ' ' + ${car.manufacturer}"></h3>
+                    <img th:src="@{'/images/' + ${car.brand} + '_' + ${car.manufacturer} + '_' + ${car.registrationNumber} + '.png' }"
+                         style="max-height: 200px; border-radius: 8px;" class="mb-3">
+
+                    <div th:if="${hasDiscount}">
+                        <p class="text-muted fw-bold fs-4 mb-0">
+                            <s th:text="${#numbers.formatDecimal(originalPrice, 1, 'WHITESPACE', 2, 'POINT')} + ' ₽'"></s>
+                        </p>
+                        <p class="text-success fw-bold fs-3">
+                            <span th:text="${#numbers.formatDecimal(discountedPrice, 1, 'WHITESPACE', 2, 'POINT')} + ' ₽'"></span>
+                            <span class="badge bg-danger ms-2" th:text="'-' + ${#numbers.formatDecimal(totalDiscount, 1, 'POINT', 2, 'POINT')} + '%'"></span>
+                        </p>
+                    </div>
+
+                    <div th:unless="${hasDiscount}">
+                        <p class="text-dark fw-bold fs-3"
+                           th:text="${#numbers.formatDecimal(originalPrice, 0, 'WHITESPACE', 2, 'POINT')} + ' ₽'"></p>
+                    </div>
+                    <button type="button" class="btn btn-primary next-step">Далее</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 2: Тест-драйв -->
+        <div class="step" id="step2" th:classappend="${currentStep == 2} ? 'active' : ''">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="mb-4">Запись на тест-драйв (опционально)</h4>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="testDriveCheck" name="requireTestDrive">
+                        <label class="form-check-label" for="testDriveCheck">Хочу тест-драйв</label>
+                    </div>
+
+                    <div id="testDriveFields" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Дата и время*</label>
+                            <label for="testDriveTime"></label><input type="datetime-local" class="form-control" name="testDriveTime" id="testDriveTime">
+                            <div id="timeError" class="invalid-feedback">
+                                Тест-драйв можно запланировать минимум за 24 часа
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Салон*</label>
+                            <select class="form-select" name="salon">
+                                <option value="">Выберите салон</option>
+                                <option value="Москва, ул. Автозаводская, 12">Москва</option>
+                                <option value="Санкт-Петербург, пр. Энтузиастов, 45">СПб</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Пожалуйста, выберите салон
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-secondary prev-step">Назад</button>
+                        <button type="button" class="btn btn-primary next-step">Далее</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 3: Данные -->
+        <div class="step" id="step3" th:classappend="${currentStep == 3} ? 'active' : ''">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="mb-4">Ваши данные</h4>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Используются данные вашего профиля
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ФИО</label>
+                        <p class="form-control-static" th:text="${user.fullName}"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <p class="form-control-static" th:text="${user.email}"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Телефон</label>
+                        <div th:if="${user.phone == null or user.phone.isEmpty()}">
+                            <div class="input-group">
+                                <input type="tel" class="form-control" id="phoneInput" placeholder="Введите ваш телефон">
+                                <button class="btn btn-outline-primary" type="button" id="savePhoneBtn">Сохранить</button>
+                                <div class="invalid-feedback" id="phoneError">
+                                    Телефон должен содержать минимум 10 цифр
+                                </div>
+                            </div>
+                        </div>
+                        <p class="form-control-static" id="phoneDisplay"
+                           th:text="${user.phone}"
+                           th:classappend="${user.phone == null or user.phone.isEmpty()} ? 'd-none' : ''"></p>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-secondary prev-step">Назад</button>
+                        <button type="button" class="btn btn-primary next-step">Далее</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаг 4: Подтверждение -->
+        <div class="step" id="step4" th:classappend="${currentStep == 4} ? 'active' : ''">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="mb-4">Подтверждение заказа</h4>
+                    <div class="mb-4">
+                        <h5>Автомобиль</h5>
+                        <div class="d-flex align-items-center">
+                            <img th:src="@{'/images/' + ${car.brand} + '_' + ${car.manufacturer} + '_' + ${car.registrationNumber} + '.png'}"
+                                 style="width: 100px; height: auto; border-radius: 4px;" class="me-3">
+                            <div>
+                                <p class="mb-1" th:text="${car.brand} + ' ' + ${car.manufacturer}"></p>
+                                <div th:if="${hasDiscount}">
+                                    <p class="text-success fw-bold fs-3">
+                                        <span th:text="${#numbers.formatDecimal(discountedPrice, 1, 'WHITESPACE', 2, 'POINT')} + ' ₽'"></span>
+                                    </p>
+                                </div>
+                                <div th:unless="${hasDiscount}">
+                                    <p class="text-success fw-bold fs-3">
+                                        <span th:text="${#numbers.formatDecimal(originalPrice, 1, 'WHITESPACE', 2, 'POINT')} + ' ₽'"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4" id="testDriveSummary">
+                        <h5>Тест-драйв</h5>
+                        <p class="text-muted">Не требуется</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Контактные данные</h5>
+                        <div th:if="${user == null}">
+                            <p id="summaryFullName"></p>
+                            <p id="summaryEmail"></p>
+                            <p id="summaryPhone"></p>
+                        </div>
+                        <div th:if="${user != null}">
+                            <p th:text="${user.fullName}"></p>
+                            <p th:text="${user.email}"></p>
+                            <p th:text="${user.phone} ?: 'Телефон не указан'"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+                        <label class="form-check-label" for="agreeTerms">
+                            Я согласен с <a href="/terms" target="_blank" class="text-decoration-none">
+                            <i class="bi bi-file-earmark-text"></i> условиями покупки
+                        </a>
+                        </label>
+                        <div class="invalid-feedback">
+                            Вы должны согласиться с условиями перед оформлением заказа
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary prev-step">Назад</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Подтвердить заказ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Инициализация шагов
+    document.addEventListener('DOMContentLoaded', function() {
+        // Показываем активный шаг
+        const activeStep = document.querySelector('.step.active');
+        if (!activeStep) {
+            document.getElementById('step1').classList.add('active');
+        }
+        updateNavSteps();
+
+        // Инициализация чекбокса тест-драйва
+        initTestDriveFields();
+    });
+
+    // Переключение шагов
+    document.querySelectorAll('.next-step').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const currentStep = document.querySelector('.step.active');
+            const nextStep = currentStep.nextElementSibling;
+
+            if (validateStep(currentStep.id)) {
+                currentStep.classList.remove('active');
+                nextStep.classList.add('active');
+                updateSummary();
+                updateNavSteps();
+            }
+        });
+    });
+
+    document.querySelectorAll('.prev-step').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const currentStep = document.querySelector('.step.active');
+            const prevStep = currentStep.previousElementSibling;
+
+            currentStep.classList.remove('active');
+            prevStep.classList.add('active');
+            updateNavSteps();
+        });
+    });
+
+    // Обновление навигации по шагам
+    function updateNavSteps() {
+        const activeStep = document.querySelector('.step.active');
+        const stepNumber = activeStep ? parseInt(activeStep.id.replace('step', '')) : 1;
+
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+            if (parseInt(link.dataset.step) <= stepNumber) {
+                link.classList.add('active');
+            }
+        });
+    }
+
+    // Валидация шага
+    function validateStep(stepId) {
+        let isValid = true;
+        const currentStep = document.getElementById(stepId);
+        if (stepId === 'step3') {
+            // Проверяем, что телефон указан (либо сохранен, либо введен новый)
+            const phoneDisplay = document.getElementById('phoneDisplay');
+            const phoneInput = document.getElementById('phoneInput');
+
+            if ((!phoneDisplay || phoneDisplay.style.display === 'none') &&
+                (!phoneInput.value || phoneInput.value.replaceAll(/[^0-9]/g, '').length < 10)) {
+                if (phoneInput) {
+                    phoneInput.classList.add('is-invalid');
+                }
+                isValid = false;
+            }
+        }
+        if (stepId === 'step2') {
+            const testDriveCheck = document.getElementById('testDriveCheck');
+
+            if (testDriveCheck.checked) {
+                const timeInput = document.getElementById('testDriveTime');
+                const salonSelect = document.querySelector('select[name="salon"]');
+
+                const timeError = document.getElementById('timeError');
+
+                // Сбрасываем предыдущие ошибки
+                timeInput.classList.remove('is-invalid');
+                salonSelect.classList.remove('is-invalid');
+                timeError.style.display = 'none';
+
+                // Валидация салона
+                if (!salonSelect.value) {
+                    salonSelect.classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                // Валидация времени
+                if (!timeInput.value) {
+                    timeInput.classList.add('is-invalid');
+                    timeError.textContent = 'Пожалуйста, укажите дату и время';
+                    timeError.style.display = 'block';
+                    isValid = false;
+                } else {
+                    const selectedDateTime = new Date(timeInput.value);
+                    const now = new Date();
+                    const minDateTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // +24 часа
+
+                    if (selectedDateTime < minDateTime) {
+                        timeInput.classList.add('is-invalid');
+                        timeError.textContent = 'Тест-драйв можно запланировать минимум за 24 часа';
+                        timeError.style.display = 'block';
+                        isValid = false;
+                    }
+                }
+            }
+        }
+
+        // Прокрутка к первой ошибке
+        if (!isValid) {
+            const firstError = currentStep.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                firstError.focus();
+            }
+        }
+
+        return isValid;
+    }
+
+    // Инициализация полей тест-драйва
+    function initTestDriveFields() {
+        const testDriveCheck = document.getElementById('testDriveCheck');
+        const testDriveFields = document.getElementById('testDriveFields');
+
+        testDriveCheck.addEventListener('change', function() {
+            testDriveFields.style.display = this.checked ? 'block' : 'none';
+
+            // Сбрасываем валидацию при скрытии
+            if (!this.checked) {
+                document.querySelectorAll('#testDriveFields .is-invalid').forEach(el => {
+                    el.classList.remove('is-invalid');
+                });
+                updateTestDriveSummary();
+            }
+        });
+
+        // Валидация при изменении значений
+        document.querySelectorAll('#testDriveFields input, #testDriveFields select').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value) {
+                    this.classList.remove('is-invalid');
+                    updateTestDriveSummary();
+                }
+            });
+        });
+    }
+
+    // Обновление сводки тест-драйва
+    function updateTestDriveSummary() {
+        const testDriveCheck = document.getElementById('testDriveCheck');
+        const testDriveSummary = document.getElementById('testDriveSummary');
+
+        if (testDriveCheck.checked) {
+            const timeInput = document.getElementById('testDriveTime');
+            const salonSelect = document.querySelector('select[name="salon"]');
+
+            if (timeInput.value && salonSelect.value) {
+                const date = new Date(timeInput.value);
+                testDriveSummary.innerHTML = `
+                    <h5>Тест-драйв</h5>
+                    <p>${date.toLocaleDateString()} в ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                    <p>${salonSelect.options[salonSelect.selectedIndex].text}</p>
+                `;
+            }
+        } else {
+            testDriveSummary.innerHTML = `
+                <h5>Тест-драйв</h5>
+                <p class="text-muted">Не требуется</p>
+            `;
+        }
+    }
+
+    // Обновление сводки всей формы
+    function updateSummary() {
+        updateTestDriveSummary();
+    }
+
+    // Валидация перед отправкой
+    document.getElementById('orderForm').addEventListener('submit', function(e) {
+        const agreeCheckbox = document.getElementById('agreeTerms');
+        if (!agreeCheckbox.checked) {
+            e.preventDefault();
+            agreeCheckbox.classList.add('is-invalid');
+            window.scrollTo({
+                top: agreeCheckbox.offsetTop - 100,
+                behavior: 'smooth'
+            });
+        }
+    });
+
+    document.getElementById('savePhoneBtn').addEventListener('click', function () {
+        const phoneInput = document.getElementById('phoneInput');
+        const phoneError = document.getElementById('phoneError');
+        const phoneValue = phoneInput.value.trim();
+        const phoneDigits = phoneValue.replace(/\D/g, '');
+
+        if (phoneDigits.length < 10) {
+        phoneInput.classList.add('is-invalid');
+        phoneError.style.display = 'block';
+        return;
+    }
+        phoneInput.classList.remove('is-invalid');
+        phoneError.style.display = 'none';
+
+        fetch('/user/update-phone', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+    },
+        body: JSON.stringify({phone: phoneValue})
+    })
+        .then(response => {
+        if (response.ok) {
+        return response.json();
+    } else {
+        throw new Error("Ошибка сервера");
+    }
+    })
+        .then(data => {
+        if (data.success) {
+        // Обновим отображение телефона
+        document.getElementById('phoneDisplay').textContent = data.phone;
+        // Спрячем инпут и кнопку
+        phoneInput.parentElement.style.display = 'none';
+        // Покажем новое значение телефона
+        document.getElementById('phoneDisplay').style.display = 'block';
+    } else {
+        alert("Не удалось сохранить номер телефона");
+    }
+    })
+        .catch(error => {
+        alert(error);
+    });
+    });
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Выкуп автомобиля</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    #photoPreview img {
+      max-width: 150px;
+      max-height: 150px;
+      margin: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    #photoPreview {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .was-validated .form-control:invalid,
+    .was-validated .form-select:invalid {
+      border-color: #dc3545;
+    }
+    .invalid-feedback {
+      display: none;
+      color: #dc3545;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+    .was-validated .form-control:invalid ~ .invalid-feedback,
+    .was-validated .form-select:invalid ~ .invalid-feedback {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container my-5">
+  <h1 class="mb-4">Заявка на выкуп автомобиля</h1>
+
+  <!-- Общее сообщение об ошибке -->
+  <div id="errorMessage" th:if="${error}" class="alert alert-danger mb-4">
+    <i class="bi bi-exclamation-circle"></i> <span th:text="${error}"></span>
+  </div>
+
+  <form th:action="@{/buyback}" method="post" enctype="multipart/form-data" id="buybackForm" class="needs-validation" novalidate>
+    <!-- Марка и модель -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Марка автомобиля*</label>
+        <select class="form-select" name="carBrand" required>
+          <option value="">Выберите марку</option>
+          <option th:each="brand : ${brands}"
+                  th:value="${brand}"
+                  th:text="${brand}"></option>
+        </select>
+        <div class="invalid-feedback" id="brandError">
+          Пожалуйста, выберите марку автомобиля
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Модель*</label>
+        <input type="text" class="form-control" name="carModel" required>
+        <div class="invalid-feedback" id="modelError">
+          Пожалуйста, укажите модель автомобиля
+        </div>
+      </div>
+    </div>
+
+    <!-- Год и пробег -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Год выпуска*</label>
+        <input type="number" class="form-control" name="carYear"
+               min="1990" th:max="${T(java.time.LocalDateTime).now().getYear() + 1}" required>
+        <div class="invalid-feedback" id="yearError">
+          Год выпуска должен быть между 1990 и <span th:text="${T(java.time.LocalDateTime).now().getYear() + 1}"></span>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Пробег (км)*</label>
+        <input type="number" class="form-control" name="mileage" min="0" required>
+        <div class="invalid-feedback" id="mileageError">
+          Пожалуйста, укажите пробег автомобиля
+        </div>
+      </div>
+    </div>
+
+    <!-- VIN и состояние -->
+    <div class="mb-3">
+      <label class="form-label">VIN-номер (если есть)</label>
+      <input type="text" class="form-control" name="vin" maxlength="17">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Состояние автомобиля*</label>
+      <textarea class="form-control" name="condition" rows="3" required
+                placeholder="Опишите повреждения, особенности эксплуатации"></textarea>
+      <div class="invalid-feedback" id="conditionError">
+        Пожалуйста, опишите состояние автомобиля
+      </div>
+    </div>
+
+    <!-- Загрузка фото -->
+    <div class="mb-4">
+      <label class="form-label">Фотографии автомобиля* (до 5 шт.)</label>
+      <input type="file" class="form-control" name="photos" multiple
+             accept="image/*" id="photoUpload" required>
+      <div class="invalid-feedback" id="photosError">
+        Пожалуйста, загрузите фотографии автомобиля
+      </div>
+      <div class="mt-2" id="photoPreview"></div>
+      <small class="text-muted">Сфотографируйте: перед, зад, боковые стороны, салон, повреждения</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Отправить на оценку</button>
+  </form>
+</div>
+
+<script>
+  // Валидация формы при отправке
+  document.getElementById('buybackForm').addEventListener('submit', function(event) {
+    const form = this;
+    if (!form.checkValidity()) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    form.classList.add('was-validated');
+  });
+
+  // Превью фотографий
+  document.getElementById('photoUpload').addEventListener('change', function(e) {
+    const preview = document.getElementById('photoPreview');
+    preview.innerHTML = '';
+
+    // Лимит 5 фото
+    if (this.files.length > 5) {
+      alert('Максимум 5 фотографий');
+      this.value = '';
+      return;
+    }
+
+    // Проверка типа файлов
+    Array.from(this.files).forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        alert('Пожалуйста, загружайте только изображения (JPEG, PNG)');
+        this.value = '';
+        preview.innerHTML = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.maxWidth = '150px';
+        img.style.margin = '5px';
+        preview.appendChild(img);
+      }
+      reader.readAsDataURL(file);
+    });
+  });
+
+  // Валидация года при вводе
+  document.querySelector('input[name="carYear"]').addEventListener('input', function() {
+    const currentYear = new Date().getFullYear();
+    const minYear = 1990;
+    const maxYear = currentYear + 1;
+
+    if (this.value < minYear || this.value > maxYear) {
+      this.setCustomValidity(`Год должен быть между ${minYear} и ${maxYear}`);
+    } else {
+      this.setCustomValidity('');
+    }
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${car.brand} + ' ' + ${car.manufacturer} + ' | Автосалон'"></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    .specs-table th {
+      width: 40%;
+    }
+    .car-image {
+      border-radius: 10px;
+      max-width: 400px;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+<!-- Навигация -->
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container my-5">
+  <!-- Хлебные крошки -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Главная</a></li>
+      <li class="breadcrumb-item"><a href="/catalog">Каталог</a></li>
+      <li class="breadcrumb-item active" aria-current="page" th:text="${car.brand} + ' ' + ${car.manufacturer}"></li>
+    </ol>
+  </nav>
+
+  <!-- Основная информация -->
+  <div class="row mb-5">
+    <div class="col-md-6">
+      <img th:src="@{'/images/' + ${car.brand} + '_' + ${car.manufacturer} + '_' + ${car.registrationNumber} + '.png'}"
+           class="car-image shadow" alt="Фото автомобиля">
+    </div>
+    <div class="col-md-6">
+      <h1 th:text="${car.brand} + ' ' + ${car.manufacturer}"></h1>
+      <div th:if="${hasDiscount}">
+        <p class="text-muted fw-bold fs-4 mb-0">
+          <s th:text="${#numbers.formatDecimal(originalPrice, 1, 'WHITESPACE', 2, 'POINT')} + ' ₽'"></s>
+        </p>
+        <p class="text-success fw-bold fs-3">
+          <span th:text="${#numbers.formatDecimal(discountedPrice, 1, 'WHITESPACE', 2, 'POINT')} + ' ₽'"></span>
+          <span class="badge bg-danger ms-2" th:text="'-' + ${#numbers.formatDecimal(totalDiscount, 1, 'POINT', 2, 'POINT')} + '%'"></span>
+        </p>
+      </div>
+
+      <div th:unless="${hasDiscount}">
+        <p class="text-dark fw-bold fs-3"
+           th:text="${#numbers.formatDecimal(originalPrice, 0, 'WHITESPACE', 2, 'POINT')} + ' ₽'"></p>
+      </div>
+        <span class="text-dark">Статус: </span>
+        <span th:class="${car.status.toString() == 'available'} ? 'text-success' : 'text-danger'">
+        <i th:class="${car.status.toString() == 'available'} ? 'bi bi-check-circle-fill' : 'bi bi-x-circle-fill'"></i>
+        <span th:text="${car.status.toString()}"></span>
+    </span>
+      </p>
+
+      <!-- Кнопки действий -->
+      <div class="d-grid gap-3 d-md-block mt-4">
+        <a th:href="@{'/order/' + ${car.carId}}" class="btn btn-primary btn-lg me-3">Оформить заказ</a>      </div>
+    </div>
+  </div>
+
+  <!-- Табы с характеристиками -->
+  <ul class="nav nav-tabs mb-4" id="specsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="tech-tab" data-bs-toggle="tab" data-bs-target="#tech" type="button">
+        Технические характеристики
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="consumer-tab" data-bs-toggle="tab" data-bs-target="#consumer" type="button">
+        Комфорт
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="dynamic-tab" data-bs-toggle="tab" data-bs-target="#dynamic" type="button">
+        История
+      </button>
+    </li>
+  </ul>
+
+  <!-- Содержимое табов -->
+  <div class="tab-content p-3 border-top-0 border rounded-bottom">
+    <!-- Технические характеристики -->
+    <div class="tab-pane fade show active" id="tech" role="tabpanel">
+      <table class="table specs-table">
+        <tr>
+          <th>Двигатель</th>
+          <td th:text="${techSpecs.engineVolume} + ' л (' + ${techSpecs.power} + ' л.с.)'"></td>
+        </tr>
+        <tr>
+          <th>Топливо</th>
+          <td th:text="${techSpecs.fuelType}"></td>
+        </tr>
+        <tr>
+          <th>Коробка передач</th>
+          <td th:text="${techSpecs.automaticTransmission} ? 'Автомат' : 'Механика'"></td>
+        </tr>
+        <tr>
+          <th>Расход топлива</th>
+          <td th:text="${techSpecs.fuelConsumption} + ' л/100км'"></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Потребительские характеристики -->
+    <div class="tab-pane fade" id="consumer" role="tabpanel">
+      <table class="table specs-table">
+        <tr>
+          <th>Цвет</th>
+          <td th:text="${consumerSpecs.color}"></td>
+        </tr>
+        <tr>
+          <th>Материал салона</th>
+          <td th:text="${consumerSpecs.interiorMaterial}"></td>
+        </tr>
+        <tr>
+          <th>Кондиционер</th>
+          <td th:text="${consumerSpecs.hasAirConditioning} ? 'Есть' : 'Нет'"></td>
+        </tr>
+        <tr>
+          <th>Мультимедиа</th>
+          <td th:text="${consumerSpecs.hasMultimedia} ? 'Есть' : 'Нет'"></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Динамические характеристики -->
+    <div class="tab-pane fade" id="dynamic" role="tabpanel">
+      <table class="table specs-table">
+        <tr>
+          <th>Пробег</th>
+          <td th:text="${dynamicSpecs.mileage} + ' км'"></td>
+        </tr>
+        <tr>
+          <th>Последнее ТО</th>
+          <td th:text="${#temporals.format(dynamicSpecs.lastService, 'dd.MM.yyyy')}"></td>
+        </tr>
+        <tr>
+          <th>Тест-драйвы</th>
+          <td th:text="${dynamicSpecs.testDriveCount} + ' раз'"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Футер -->
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

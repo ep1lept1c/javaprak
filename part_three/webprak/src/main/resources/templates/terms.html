@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Условия покупки | Автосалон</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    .terms-container {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    .terms-header {
+      border-bottom: 2px solid #eee;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+    .terms-section {
+      margin-bottom: 25px;
+    }
+    .terms-section h3 {
+      color: #0d6efd;
+      margin-bottom: 15px;
+    }
+    .terms-footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      font-size: 0.9rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container terms-container">
+  <div class="terms-header text-center">
+    <h1><i class="bi bi-file-earmark-text"></i> Условия покупки</h1>
+    <p class="text-muted">Последнее обновление: [[${#temporals.format(#temporals.createToday(), 'dd.MM.yyyy')}]]</p>
+  </div>
+
+  <div class="terms-section">
+    <h3><i class="bi bi-1-circle"></i> Общие положения</h3>
+    <p>1.1. Настоящие условия регулируют процесс покупки автомобилей в нашем автосалоне.</p>
+    <p>1.2. Все цены указаны в рублях и включают НДС, если иное не указано отдельно.</p>
+  </div>
+
+  <div class="terms-section">
+    <h3><i class="bi bi-2-circle"></i> Порядок оформления заказа</h3>
+    <p>2.1. Для оформления заказа необходимо заполнить все обязательные поля формы.</p>
+    <p>2.2. После оформления заказа с вами свяжется менеджер для подтверждения деталей.</p>
+  </div>
+
+  <div class="terms-section">
+    <h3><i class="bi bi-3-circle"></i> Оплата</h3>
+    <p>3.1. Мы принимаем оплату наличными и банковскими картами.</p>
+    <p>3.2. Возможна оплата через кредитные программы банков-партнеров.</p>
+  </div>
+
+  <div class="terms-section">
+    <h3><i class="bi bi-4-circle"></i> Доставка и получение</h3>
+    <p>4.1. Самовывоз со склада доступен в течение 3 рабочих дней после оплаты.</p>
+    <p>4.2. Доставка по региону возможна за дополнительную плату.</p>
+  </div>
+
+  <div class="terms-section">
+    <h3><i class="bi bi-5-circle"></i> Гарантии и возврат</h3>
+    <p>5.1. На все автомобили предоставляется гарантия 1 год.</p>
+    <p>5.2. Возврат возможен в течение 14 дней с момента покупки при сохранении товарного вида.</p>
+  </div>
+
+  <div class="terms-footer text-center">
+    <p>Если у вас есть вопросы, свяжитесь с нами по телефону: +7 (966) 311-25-03</p>
+    <p>или по email: info@autosalon.ru</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
